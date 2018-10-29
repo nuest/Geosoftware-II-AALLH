@@ -13,12 +13,11 @@ import click
 
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
-@click.option('--name', prompt="File name ", help="File name")
+@click.option('--name', prompt="File name", help="File name without extension")
 #@click.option('--type', prompt="File type ", help="File type")
 
 def getBoundingBox(path, name):
     filepath = "%s\%s" % (path, name)
-    print(filepath)
     try:
         myshp = open("%s.shp" % (filepath), "rb")
         sf = shapefile.Reader(shp=myshp)
