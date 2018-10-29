@@ -4,8 +4,9 @@ Created on 27.10.2018
 @author: hfock
 '''
 import os, sys
+
 file_path = '../Python_Modules'
-sys.path.append(os.path.dirname(file_path))
+sys.path.append(file_path)
 
 import shapefile
 import click
@@ -17,14 +18,25 @@ import click
 
 def getBoundingBox(path, name):
     filepath = "%s\%s" % (path, name)
+    print(filepath)
     try:
         myshp = open("%s.shp" % (filepath), "rb")
         sf = shapefile.Reader(shp=myshp)
-    except:
+    except :
+        pass
+
+    try:
         mydbf = open("%s.dbf" % filepath, "rb")
         sf = shapefile.Reader(dbf=mydbf)
-        
-    click.echo(sf.bbox)
+    except :
+        pass
+
+    try:
+        click.echo(sf.bbox)
+    except:
+        click.echo("File not Found: Try to check the spelling!")
+
+    
 
 if __name__ == '__main__':
     getBoundingBox()
