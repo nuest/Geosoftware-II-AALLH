@@ -3,6 +3,10 @@ Created on 27.10.2018
 
 @author: hfock
 '''
+import os, sys
+file_path = '../Python_Modules'
+sys.path.append(os.path.dirname(file_path))
+
 import shapefile
 import click
 
