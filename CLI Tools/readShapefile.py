@@ -33,7 +33,7 @@ def getBoundingBox(path, name):
     try:
         click.echo(sf.bbox)
     except:
-        click.echo("File not Found: Try to check the spelling!")
+        click.echo("File not Found!")
 
     
 
