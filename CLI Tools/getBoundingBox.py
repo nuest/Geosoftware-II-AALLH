@@ -126,9 +126,14 @@ def getBoundingBox(name, path):
 
 
     elif file_extension == ".gpkg":
-        sql = "SELECT ST_IsEmpty() FROM %s as file" % filepath
-        test = gdal.Dataset.ExecuteSQL(sql)
-        print(test)
+        # @see http://cite.opengeospatial.org/pub/cite/files/edu/geopackage/text/advanced.html
+        ds = ogr.Open(filepath)
+        lyr = ds.GetLayerByName( "gpkg_geometry_columns" )
+        print(lyr)
+
+        # sql = "SELECT ST_IsEmpty() FROM %s as file" % filepath
+        # test = gdal.Dataset.ExecuteSQL(sql)
+        # print(test)
 
     elif file_extension == ".csv" or file_extension == ".txt":
         #@see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
@@ -140,20 +145,38 @@ def getBoundingBox(name, path):
             ###############################
             # search for coordinat colums #
             ###############################
-
-            df = pd.read_csv(filepath, header=0)
-
-            # doesn't work. should return latitudes and longitudes as a List
-            # latitudes = df.lon.tolist()
-            # longitudes = df.lat.tolist()
-
-            # calculate BBOX x=lat y=lon
-            bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
-            click.echo(bbox)
-            return bbox
         except:
-            click.echo("File Error: ")
-            return None
+            pass # irgendwas sinnvolles
+        else:
+            try:
+                df = pd.read_csv(filepath, header=0)
+
+                latitudes = df.lon.tolist()
+                longitudes = df.lat.tolist()
+                
+                # calculate BBOX
+                bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+                click.echo(bbox)
+                return bbox
+
+            except AttributeError:
+                df = pd.read_csv(filepath, header=0, sep=';')
+                
+                latitudes = df.lon.tolist()
+                longitudes = df.lat.tolist()
+                
+                # calculate BBOX
+                bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+                click.echo(bbox)
+                return bbox
+
+            except AttributeError:
+                click.echo("Pleas seperate your data with either ',' or ';'!" )
+                return None
+
+            except:
+                click.echo("File Error: ")
+                return None
 
     
     else:
