@@ -12,12 +12,13 @@ sys.path.append(file_path)
 import click
 import shapefile
 import pygeoj
-from netCDF4 import Dataset
+import netCDF4 as nc
 from osgeo import gdal
 from osgeo import ogr
 from osgeo import osr
 import pandas as pd
 import csv
+import xarray as xr
 
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
@@ -106,9 +107,23 @@ def getBoundingBox(name, path):
             click.echo("File not Found or TIFF is not GeoTIFF")
 
     elif file_extension == ".nc":
-        rootgrp = Dataset(filepath, "w", format="NETCDF4")
-        print (rootgrp.data_model)
-        rootgrp.close()
+        try:
+            # https://gis.stackexchange.com/questions/270165/gdal-to-acquire-netcdf-like-metadata-structure-in-python
+            ds = xr.open_dataset(filepath)
+            coordinates = ds.to_dict()['coords']
+            lats = coordinates['latitude']['data']
+            longs = coordinates['longitude']['data']
+
+            bbox = [min(longs), min(lats), max(longs), max(lats)]
+            click.echo(bbox)
+            return bbox
+        except KeyError:
+            click.echo("coordinate names may be spelled wrong: should be 'latitude'/'longitude")
+            return None
+        except:
+            click.echo("File not found")
+            return None
+
 
     elif file_extension == ".gpkg":
         sql = "SELECT ST_IsEmpty() FROM %s as file" % filepath
@@ -133,8 +148,7 @@ def getBoundingBox(name, path):
             # longitudes = df.lat.tolist()
 
             # calculate BBOX x=lat y=lon
-            bbox = [max(latitudes), max(longitudes), min(latitudes), min(longitudes)]
-
+            bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
             click.echo(bbox)
             return bbox
         except:
