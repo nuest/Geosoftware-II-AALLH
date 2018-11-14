@@ -391,7 +391,7 @@ class Csw(object):
                 error = 1
                 code = 'NoApplicableCode'
                 locator = 'service'
-                text = 'Could not initialize repository. Check server logs'
+                text = 'Could not initialize repository. Check Could not initialize repository. Check server logs'
 
         else:  # load default repository
             self.orm = 'sqlalchemy'
