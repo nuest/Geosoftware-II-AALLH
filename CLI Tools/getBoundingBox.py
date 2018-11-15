@@ -1,30 +1,46 @@
 '''
 Created on 29.10.2018
 
-@author: hfock
+@author: Henry Fock, Lia Kirsch
 '''
 
-import os, sys
+import csv
+import os
+import sys
+import json
 
 file_path = '../Python_Modules'
 sys.path.append(file_path)
 
+from osgeo import gdal, ogr, osr
+from xml.etree import ElementTree as ET
+from os import listdir
+from os.path import isfile, join
+from xml.dom.minidom import parse
+
 import click
-import shapefile
-import pygeoj
 import netCDF4 as nc
-from osgeo import gdal
-from osgeo import ogr
-from osgeo import osr
 import pandas as pd
-import csv
+import pygeoj
+import shapefile
 import xarray as xr
+
 
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="File name with extension")
 
 def getBoundingBox(name, path):
+    """
+    returns the bounding Box of supported Datatypes and standards in WGS84.
+    
+    supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc),
+                    GeoPackage (.gpkg), alle ISO19xxx standardisiete Formate, CSV on the web
+    
+    @param path Path to the file
+    @param name name of the file with extension
+    @returns a boundingbox as an array in WGS84, formated like [minLong, minLat, maxLong, maxLat]
+    """
     filepath = "%s\%s" % (path, name)
     filename, file_extension = os.path.splitext(filepath)
     print(file_extension)
@@ -128,7 +144,7 @@ def getBoundingBox(name, path):
     elif file_extension == ".gpkg":
         # @see http://cite.opengeospatial.org/pub/cite/files/edu/geopackage/text/advanced.html
         ds = ogr.Open(filepath)
-        lyr = ds.GetLayerByName( "gpkg_geometry_columns" )
+        lyr = ds.GetLayerByName("gpkg_geometry_columns")
         print(lyr)
 
         # sql = "SELECT ST_IsEmpty() FROM %s as file" % filepath
@@ -140,19 +156,32 @@ def getBoundingBox(name, path):
         try:
             csvfile = open(filepath)
             head = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            print(next(head))
-
-            ###############################
-            # search for coordinat colums #
-            ###############################
-        except:
-            pass # irgendwas sinnvolles
+            header = next(head)[0].replace(";", ",").split(",")
+            print(header)
+            lng=None 
+            lat=None
+            for t in header:
+                if t == "longitude":
+                    lng = "longitude"
+                if t == "latitude":
+                    lat = "latitude"
+                if t == "lon":
+                    lng = "lon"
+                if t == "lng":
+                    lng = "lng"
+                if t == "lat":
+                    lat = "lat"
+            print(lng, lat)
+            if(lat == None and lng == None):
+                raise ValueError()
+        except ValueError:
+            click.echo("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
         else:
             try:
                 df = pd.read_csv(filepath, header=0)
 
-                latitudes = df.lon.tolist()
-                longitudes = df.lat.tolist()
+                latitudes = df[lng].tolist()
+                longitudes = df[lat].tolist()
                 
                 # calculate BBOX
                 bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
@@ -160,28 +189,52 @@ def getBoundingBox(name, path):
                 return bbox
 
             except AttributeError:
-                df = pd.read_csv(filepath, header=0, sep=';')
-                
-                latitudes = df.lon.tolist()
-                longitudes = df.lat.tolist()
-                
-                # calculate BBOX
-                bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
-                click.echo(bbox)
-                return bbox
+                try:
+                    df = pd.read_csv(filepath, header=0, sep=';')
+                    
+                    latitudes = df[lng].tolist()
+                    longitudes = df[lat].tolist()
+                    
+                    # calculate BBOX
+                    bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+                    click.echo(bbox)
+                    return bbox
 
-            except AttributeError:
-                click.echo("Pleas seperate your data with either ',' or ';'!" )
-                return None
+                except AttributeError:
+                    click.echo("Pleas seperate your data with either ',' or ';'!" )
+                    return None
 
             except:
-                click.echo("File Error: ")
+                click.echo("File Error: please check if your csv file is valid to 'csv on the web'")
                 return None
+
+    elif file_extension == ".gml" or file_extension == ".xml":
+        # try:
+        tree = ET.parse(filepath)
+        # for node in tree.getroot().iter():
+        #    print(node)
+        gmlstr = ET.tostring(tree.getroot()).decode()
+        print(gmlstr)
+        gml = ogr.CreateGeometryFromGML(gmlstr)
+        # print(gml)
+        # except:
+
+        # tree = ET.parse(filepath)
+        # print(tree.getroot().getElementsByTagName("{http://www.opengis.net/gml}coordinates"))
+        # for node in tree.getroot().iter():
+        #    print(node)
+
+        
+        # dom = parse(filepath)
+        # name = dom.getElementsByTagName("{http://www.opengis.net/gml}coordinates")
+        # print (name)
 
     
     else:
         click.echo("type %s not yet supported" % file_extension)
         return None
+
+
 
 if __name__ == '__main__':
     getBoundingBox()
