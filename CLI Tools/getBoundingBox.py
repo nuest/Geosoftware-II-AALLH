@@ -33,11 +33,9 @@ import ogr2ogr
 @click.option('--name', prompt="File name", help="File name with extension")
 
 def getBoundingBox(name, path):
-    """
-    returns the bounding Box of supported Datatypes and standards in WGS84.
-    
-    supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc),
-                    GeoPackage (.gpkg), alle ISO19xxx standardisiete Formate, CSV on the web
+    """returns the bounding Box of supported Datatypes and standards in WGS84.
+
+    supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc), GeoPackage (.gpkg), alle ISO19xxx standardisiete Formate, CSV on the web
     
     @param path Path to the file
     @param name name of the file with extension
@@ -239,7 +237,7 @@ def getBoundingBox(name, path):
                 return None
 
     # gml handeling
-    elif file_extension == ".gml" or file_extension == ".xml":
+    elif file_extension == ".gml" or file_extension == ".xml" or file_extension == ".kml":
         try:
             # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
             # convert the gml file to a GeoJSON file
@@ -256,6 +254,13 @@ def getBoundingBox(name, path):
         # errors
         except:
             click.echo("file not found or your gml/xml/kml data is not valid")
+            return None
+        finally:
+            try:
+                os.remove("output.json")
+            except:
+                pass
+                
             return None
 
     # if the extension has not been implemented yet or won't be supported
