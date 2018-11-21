@@ -269,7 +269,7 @@ class Csw(object):
             self.oaipmhobj = oaipmh.OAIPMH(self.context, self.config)
         return self.oaipmhobj
 
-    def dispatch(self, writer=sys.stdout, write_headers=True):
+    def dispatch(self, writer=sys.stdout, write_headers=True): # hie einmal
         """ Handle incoming HTTP request """
 
         error = 0
@@ -575,7 +575,7 @@ class Csw(object):
                     'Invalid request parameter: %s' % self.kvp['request']
                 )
 
-        LOGGER.info('Request processed')
+        LOGGER.info('Request processed') #hier einmal 
         if self.mode == 'sru':
             LOGGER.info('SRU mode detected; processing response.')
             self.response = self.sru().response_csw2sru(self.response,
