@@ -59,6 +59,73 @@ def getTimeExtend(name, path):
             click.echo("File not found")
             return None
 
+<<<<<<< Updated upstream
+=======
+    elif file_extension == "csv" or file_extension == ".txt":
+        # column name should be either date, time or timestamp
+
+         # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
+        try: # finding the correct collums for latitude and longitude
+            csvfile = open(filepath)
+            head = csv.reader(csvfile, delimiter=' ', quotechar='|')
+            # get the headline and convert, if possible, ';' to ',' 
+            # and seperate each word devided by a ',' into an array 
+            header = next(head)[0].replace(";", ",").split(",")
+            time = None
+            # searching for valid names for latitude and longitude
+            for t in header:
+                if t == "date":
+                   time = "date"
+                if t == "time":
+                    time = "time"
+                if t == "timestamp":
+                    time = "timestamp"
+
+            # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
+            if(time == None):
+                raise ValueError()
+        # errors
+        except ValueError:
+            click.echo("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
+            return None
+        except:
+            click.echo("file not found")
+            return None
+        
+        # if no error accured
+        else:
+            try:
+                df = pd.read_csv(filepath, header=0)
+                # get time from found columns
+                timestamp = df[time].tolist()
+                
+                # taking the smallest and highest coordinates from the lists
+                timeext = [min(timestamp), max(timestamp)]
+                click.echo(timeext)
+                return timeext
+
+            # in case the words are separated by a ';' insted of a comma
+            except KeyError:
+                try:
+                    # tell the reader that the seperator is a ';'
+                    df = pd.read_csv(filepath, header=0, sep=';')
+                    # get all coordinates from found collums
+                    timestamp = df[time].tolist()
+                    
+                    # taking the smallest and highest coordinates from the lists
+                    timeext = [min(timestamp), max(timestamp)]
+                    click.echo(timeext)
+                    return timeext
+                # the csv is not valid
+                except KeyError:
+                    click.echo("Pleas seperate your data with either ',' or ';'!" )
+                    return None
+            # errors
+            except:
+                click.echo("File Error: File not found or check if your csv file is valid to 'csv on the web'")
+                return None
+
+>>>>>>> Stashed changes
 # Main method
 if __name__ == '__main__':
     getTimeExtend()

@@ -8,17 +8,13 @@ import csv
 import os
 import sys
 import json
+import sqlite3
 
 # add local modules folder
 file_path = '../Python_Modules'
 sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
-from xml.etree import ElementTree as ET
-from os import listdir
-from os.path import isfile, join
-from xml.dom.minidom import parse
-
 import click
 import netCDF4 as nc
 import pandas as pd
@@ -152,18 +148,42 @@ def getBoundingBox(name, path):
             click.echo("File not found")
             return None
 
-##########################################################################################################
-    # handeling geoPackage (not working)
-    # elif file_extension == ".gpkg":
-    #     # @see http://cite.opengeospatial.org/pub/cite/files/edu/geopackage/text/advanced.html
-    #     ds = ogr.Open(filepath)
-    #     lyr = ds.GetLayerByName("gpkg_geometry_columns")
-    #     print(lyr)
+    # handeling geoPackage
+    elif file_extension == ".gpkg":
+        # @see https://stackoverflow.com/questions/35945437/python-gdal-projection-conversion-from-wgs84-to-nztm2000-is-not-correct
+        try:
+            conn = sqlite3.connect(filepath)
+            c = conn.cursor()
+            c.execute("""   SELECT min_x, min_y, max_x, max_y, srs_id 
+                            FROM gpkg_contents 
+                    """)
+            row = c.fetchone()
+            bbox = [row[0], row[1], row[2], row[3]]
+            print(bbox)
 
-    #     # sql = "SELECT ST_IsEmpty() FROM %s as file" % filepath
-    #     # test = gdal.Dataset.ExecuteSQL(sql)
-    #     # print(test)
-#########################################################################################################
+            refsys = row[4]
+
+            if refsys == 4327:
+                assert "EPSG:4327 out of date"
+
+            # Input file details   
+            minpoint = CRSTransform(row[0], row[1], refsys)
+            maxpoint = CRSTransform(row[2], row[3], refsys)
+
+            bbox = [minpoint[0], minpoint[1], maxpoint[0], maxpoint[1]]
+            print(bbox)
+            conn.close()
+            return bbox
+        except AssertionError as e:
+            print(e)
+        except:
+            click.echo("File not Found")
+            return None
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
 
 
     # csv or csv formated textfile handeling (csv on the web)
@@ -215,7 +235,7 @@ def getBoundingBox(name, path):
                 return bbox
 
             # in case the words are separated by a ';' insted of a comma
-            except AttributeError:
+            except KeyError:
                 try:
                     # tell the reader that the seperator is a ';'
                     df = pd.read_csv(filepath, header=0, sep=';')
@@ -228,7 +248,7 @@ def getBoundingBox(name, path):
                     click.echo(bbox)
                     return bbox
                 # the csv is not valid
-                except AttributeError:
+                except KeyError:
                     click.echo("Pleas seperate your data with either ',' or ';'!" )
                     return None
             # errors
@@ -268,6 +288,23 @@ def getBoundingBox(name, path):
         click.echo("type %s not yet supported" % file_extension)
         return None
 
+
+
+def CRSTransform(Lat, Long, refsys):
+    # Coordinate Reference System (CRS)
+    SourceEPSG = refsys
+    TargetEPSG = 4326
+
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(SourceEPSG)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(TargetEPSG)
+
+    transform = osr.CoordinateTransformation(source, target)
+    point = ogr.CreateGeometryFromWkt("POINT (%s %s)" % (Lat, Long))
+    point.Transform(transform)
+    return [point.GetX(),point.GetY()]
 
 # Main method
 if __name__ == '__main__':
