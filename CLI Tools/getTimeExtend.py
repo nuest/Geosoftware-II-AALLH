@@ -2,17 +2,14 @@ import csv
 import os
 import sys
 import json
+import functools
+import math
 
 # add local modules folder
 file_path = '../Python_Modules'
 sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
-from xml.etree import ElementTree as ET
-from os import listdir
-from os.path import isfile, join
-from xml.dom.minidom import parse
-
 import click
 import netCDF4 as nc
 import pandas as pd
@@ -20,6 +17,7 @@ import pygeoj
 import shapefile
 import xarray as xr
 import ogr2ogr
+from DateTime import DateTime
 
 # asking for parameters in command line
 @click.command()
@@ -49,7 +47,22 @@ def getTimeExtend(name, path):
             ds = xr.open_dataset(filepath)
             # transform coordinates section in a dictionary
             time = ds.to_dict()['coords']['time']['data']
-            print(time[0],"-", time[-1])
+            isoTimeSeq = list(map(DateTime,(list(map(str, time)))))
+            isoTimeSeq.sort()
+            avgInt = 0
+            if len(isoTimeSeq) > 1:
+                interval = []
+
+                for i in range(len(isoTimeSeq)-1):
+                    interval.append(isoTimeSeq[i+1] - isoTimeSeq[i])
+                
+                avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
+                # avgInt = math.floor(avgInt*1000)/1000
+                print(avgInt)
+            
+            click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
+            return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
+
             
         # errors
         except KeyError:
@@ -59,9 +72,7 @@ def getTimeExtend(name, path):
             click.echo("File not found")
             return None
 
-<<<<<<< Updated upstream
-=======
-    elif file_extension == "csv" or file_extension == ".txt":
+    elif file_extension == ".csv" or file_extension == ".txt":
         # column name should be either date, time or timestamp
 
          # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
@@ -86,7 +97,7 @@ def getTimeExtend(name, path):
                 raise ValueError()
         # errors
         except ValueError:
-            click.echo("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
+            click.echo("pleas rename timestamp to: date/time/timestamp")
             return None
         except:
             click.echo("file not found")
@@ -98,11 +109,22 @@ def getTimeExtend(name, path):
                 df = pd.read_csv(filepath, header=0)
                 # get time from found columns
                 timestamp = df[time].tolist()
+
+                isoTimeSeq = list(map(DateTime,(list(map(str, timestamp)))))
+                isoTimeSeq.sort()
+                avgInt = 0
+                if len(isoTimeSeq) > 1:
+                    interval = []
+
+                for i in range(len(isoTimeSeq)-1):
+                    interval.append(isoTimeSeq[i+1] - isoTimeSeq[i])
                 
-                # taking the smallest and highest coordinates from the lists
-                timeext = [min(timestamp), max(timestamp)]
-                click.echo(timeext)
-                return timeext
+                avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
+                # avgInt = math.floor(avgInt*1000)/1000
+                print(avgInt)
+            
+                click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
+                return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
 
             # in case the words are separated by a ';' insted of a comma
             except KeyError:
@@ -112,10 +134,21 @@ def getTimeExtend(name, path):
                     # get all coordinates from found collums
                     timestamp = df[time].tolist()
                     
-                    # taking the smallest and highest coordinates from the lists
-                    timeext = [min(timestamp), max(timestamp)]
-                    click.echo(timeext)
-                    return timeext
+                    isoTimeSeq = list(map(DateTime,(list(map(str, timestamp)))))
+                    isoTimeSeq.sort()
+                    avgInt = 0
+                    if len(isoTimeSeq) > 1:
+                        interval = []
+
+                    for i in range(len(isoTimeSeq)-1):
+                        interval.append(isoTimeSeq[i+1] - isoTimeSeq[i])
+                    
+                    avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
+                    # avgInt = math.floor(avgInt*1000)/1000
+                    print(avgInt)
+                
+                    click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
+                    return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
                 # the csv is not valid
                 except KeyError:
                     click.echo("Pleas seperate your data with either ',' or ';'!" )
@@ -124,8 +157,9 @@ def getTimeExtend(name, path):
             except:
                 click.echo("File Error: File not found or check if your csv file is valid to 'csv on the web'")
                 return None
+    else:
+        click.echo("Filetype %s not yet supported" % file_extension)
 
->>>>>>> Stashed changes
 # Main method
 if __name__ == '__main__':
     getTimeExtend()

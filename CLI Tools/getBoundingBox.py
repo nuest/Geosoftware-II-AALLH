@@ -55,6 +55,14 @@ def getBoundingBox(name, path):
             click.echo(sf.bbox)
             return sf.bbox
 
+        # gdal.SetConfigOption("SHAPE_RESTORE_SHX", "YES")
+        # driver = ogr.GetDriverByName('ESRI Shapefile')
+        # dataset = driver.Open(r'%s' % filepath)
+        # layer = dataset.GetLayer()
+        # refsys = layer.GetSpatialRef()
+        # print(refsys)
+
+
     # geojson handeling
     elif file_extension == ".json" or file_extension == ".geojson":
         try:
