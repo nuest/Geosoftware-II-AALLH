@@ -173,7 +173,7 @@ def getBoundingBox(name, path):
 
             if refsys == 4327:
                 assert "EPSG:4327 out of date"
-
+            
             # Input file details   
             minpoint = CRSTransform(row[0], row[1], refsys)
             maxpoint = CRSTransform(row[2], row[3], refsys)

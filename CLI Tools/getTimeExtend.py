@@ -4,6 +4,7 @@ import sys
 import json
 import functools
 import math
+import sqlite3
 
 # add local modules folder
 file_path = '../Python_Modules'
@@ -157,6 +158,30 @@ def getTimeExtend(name, path):
             except:
                 click.echo("File Error: File not found or check if your csv file is valid to 'csv on the web'")
                 return None
+
+    elif file_extension == ".json" or file_extension == ".geojson":
+        click.echo("GeoJSON does not support Timestamp")
+
+    elif file_extension == ".gpkg":
+        try:
+            conn = sqlite3.connect(filepath)
+            c = conn.cursor()
+            c.execute("""   SELECT last_change 
+                            FROM gpkg_contents 
+                    """)
+            row = c.fetchone()
+            row = list(map(DateTime, row))
+            print(row)
+            return [row[0], row[0], 0]
+            click.echo([row[0], row[0], 0])
+        except:
+            click.echo("File Not Found")
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
+    
     else:
         click.echo("Filetype %s not yet supported" % file_extension)
 
