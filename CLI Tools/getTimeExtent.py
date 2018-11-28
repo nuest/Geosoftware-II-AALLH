@@ -5,6 +5,7 @@ import json
 import functools
 import math
 import sqlite3
+import time as timeMod
 
 # add local modules folder
 file_path = '../Python_Modules'
@@ -19,6 +20,8 @@ import shapefile
 import xarray as xr
 import ogr2ogr
 from DateTime import DateTime
+from datetime import date
+
 
 # asking for parameters in command line
 @click.command()
@@ -160,7 +163,52 @@ def getTimeExtend(name, path):
                 return None
 
     elif file_extension == ".json" or file_extension == ".geojson":
-        click.echo("GeoJSON does not support Timestamp")
+        ds = open(filepath)
+        jsonDict = json.load(ds)
+        isoTimeSeq = []
+        if jsonDict["type"] == "FeatureCollection":
+            prop = ""
+            if "time" in jsonDict["features"][0]:
+                prop = "time"
+            elif "date" in jsonDict["features"][0]:
+                prop = "date"
+            else:
+                click.echo("no time data available")
+                return None
+
+            timeext = []
+            for feature in jsonDict["features"]:
+                timeext.append(feature["properties"][prop])
+            isoTimeSeq = list(map(DateTime, timeext))
+
+            isoTimeSeq.sort()
+            avgInt = 0
+            if len(isoTimeSeq) > 1:
+                interval = []
+
+            for i in range(len(isoTimeSeq)-1):
+                interval.append(isoTimeSeq[i+1] - isoTimeSeq[i])
+            
+            avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
+            print(avgInt)
+        
+            click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
+            return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
+        else:
+            prop = ""
+            if "time" in jsonDict:
+                prop = "time"
+            elif "date" in jsonDict:
+                prop = "date"
+            else:
+                click.echo("no time data available")
+                return None
+
+            timeext = jsonDict["properties"]["time"]
+            timeext = DateTime(timeext)
+            click.echo([timeext, timeext, 0])
+            return [timeext, timeext, 0]
+
 
     elif file_extension == ".gpkg":
         try:
@@ -181,6 +229,10 @@ def getTimeExtend(name, path):
                 conn.close()
             except:
                 pass
+
+    elif file_extension == ".tif" or file_extension == ".tiff":
+        ds =  gdal.Open(filepath)
+        print(gdal.Info(ds))
     
     else:
         click.echo("Filetype %s not yet supported" % file_extension)
