@@ -22,6 +22,7 @@ import pygeoj
 import shapefile
 import xarray as xr
 import ogr2ogr
+import numpy as np
 
 # asking for parameters in command line
 @click.command()
@@ -54,6 +55,14 @@ def getBoundingBox(name, path):
         else: # if no error accured
             click.echo(sf.bbox)
             return sf.bbox
+
+        # gdal.SetConfigOption("SHAPE_RESTORE_SHX", "YES")
+        # driver = ogr.GetDriverByName('ESRI Shapefile')
+        # dataset = driver.Open(r'%s' % filepath)
+        # layer = dataset.GetLayer()
+        # refsys = layer.GetSpatialRef()
+        # print(refsys)
+
 
     # geojson handeling
     elif file_extension == ".json" or file_extension == ".geojson":
@@ -154,26 +163,40 @@ def getBoundingBox(name, path):
         try:
             conn = sqlite3.connect(filepath)
             c = conn.cursor()
-            c.execute("""   SELECT min_x, min_y, max_x, max_y, srs_id 
-                            FROM gpkg_contents 
+            c.execute("""   SELECT min(min_x), min(min_y), max(max_x), max(max_y), srs_id
+                            FROM gpkg_contents
+                            WHERE NOT srs_id = 4327
+                            GROUP BY srs_id
                     """)
-            row = c.fetchone()
-            bbox = [row[0], row[1], row[2], row[3]]
+            row = c.fetchall()
+            print(row)
+            bboxes = []
+
+            if row == None:
+                assert LookupError("No valid data detected (EPSG:4327 not supported)")
+
+            for line in row:
+                bboxes.append([line[0], line[1], line[2], line[3], line[4]])
+            
+            wgs84bboxen = []
+            for bbox in bboxes:
+                box = CRSTransform(bbox[0], bbox[1], bbox[4])
+                box.extend(CRSTransform(bbox[2], bbox[3], bbox[4]))
+                wgs84bboxen.append(box)
+
+            bbox = [wgs84bboxen[0][0], wgs84bboxen[0][1], wgs84bboxen[0][2], wgs84bboxen[0][3]]
+            for wgs84Box in wgs84bboxen:
+                if wgs84Box[0] < bbox[0]:
+                    bbox[0] = wgs84Box[0]
+                if wgs84Box[1] < bbox[1]:
+                    bbox[1] = wgs84Box[1]
+                if wgs84Box[2] > bbox[2]:
+                    bbox[2] = wgs84Box[2]
+                if wgs84Box[3] > bbox[3]:
+                    bbox[3] = wgs84Box[3]
+
             print(bbox)
 
-            refsys = row[4]
-
-            if refsys == 4327:
-                assert "EPSG:4327 out of date"
-
-            # Input file details   
-            minpoint = CRSTransform(row[0], row[1], refsys)
-            maxpoint = CRSTransform(row[2], row[3], refsys)
-
-            bbox = [minpoint[0], minpoint[1], maxpoint[0], maxpoint[1]]
-            print(bbox)
-            conn.close()
-            return bbox
         except AssertionError as e:
             print(e)
         except:
