@@ -391,7 +391,7 @@ class Csw(object):
                 error = 1
                 code = 'NoApplicableCode'
                 locator = 'service'
-                text = 'Could not initialize repository. Check server logs'
+                text = 'Could not initialize repository. Check Could not initialize repository. Check server logs'
 
         else:  # load default repository
             self.orm = 'sqlalchemy'
@@ -486,7 +486,7 @@ class Csw(object):
                     error = 1
                     locator = 'service'
                     code = 'InvalidParameterValue'
-                    text = 'Invalid value for service: %s.\
+                    text = 'You are stupid! Invalid value for service: %s.\
                     Value MUST be CSW' % self.kvp['service']
 
                 # test version
