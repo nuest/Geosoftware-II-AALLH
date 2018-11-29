@@ -28,13 +28,13 @@ def spatialOverlap(bboxA, bboxB):
 
     print(intersectArea)
 
-    reachedPercent = intersectArea*100/largerArea
+    reachedPercentArea = intersectArea*100/largerArea
 
-    print(reachedPercent)
-    return reachedPercent
+    reachedPercentArea = floor(reachedPercentArea * 100)/100
+    print(reachedPercentArea)
+    return reachedPercentArea
 
 
-# similar scale fehlt
 def similarArea(bboxA, bboxB):
     boxA = generateGeometryFromBbox(bboxA)
     boxB = generateGeometryFromBbox(bboxB)
@@ -47,57 +47,41 @@ def similarArea(bboxA, bboxB):
     print(areaA)
     print(areaB)
 
-    reachedPercent = 0
+    reachedPercentArea = 0
     if areaA >= areaB:
-        reachedPercent = areaB*100/areaA
+        reachedPercentArea = areaB*100/areaA
     else:
-        reachedPercent = areaA*100/areaB
+        reachedPercentArea = areaA*100/areaB
 
-    print(reachedPercent)
-    return reachedPercent
+    reachedPercentArea = floor(reachedPercentArea*100)/100
+    print(reachedPercentArea)
+
+
+    return reachedPercentArea
 
 
 # funktioniert noch nicht
 def spatialDistance(bboxA, bboxB):
-    centerA = center_geolocation(((bboxA[0],bboxA[1]),(bboxA[2], bboxA[3])))
-    centerB = center_geolocation(((bboxB[0],bboxB[1]),(bboxB[2], bboxB[3])))
+    centerA = getMidPoint(bboxA)
+    centerB = getMidPoint(bboxB)
 
-    print(centerA)
-    print(centerB)
+    distA = getDistance((bboxA[1], bboxA[0]), (bboxA[3], bboxA[2]))
+    distB = getDistance((bboxB[1], bboxB[0]), (bboxB[3], bboxB[2]))
 
-    wkt = "LINESTRING (%f %f, %f %f)" % (centerA[0], centerA[1], centerB[0], centerB[1])
-    centerLine = ogr.CreateGeometryFromWkt(wkt)
+    print(distA, distB)
 
-    distance = centerLine.Length()
-    print(distance)
+    longerDistance = distA if distA >= distB else distB
 
+    print(longerDistance)
 
+    distBetweenCenterPoints = getDistance((centerA.GetY(), centerA.GetX()),(centerB.GetY(), centerB.GetX()))
+    print(distBetweenCenterPoints)
 
+    distPercentage = (1 - (distBetweenCenterPoints/longerDistance)) * 100
+    distPercentage = floor(distPercentage * 100)/100
+    print(distPercentage if distPercentage>0 else 0)
+    return distPercentage if distPercentage>0 else 0
 
-def center_geolocation(geolocations):
-    """
-    Provide a relatively accurate center lat, lon returned as a list pair, given
-    a list of list pairs.
-    @see: https://stackoverflow.com/questions/34549767/how-to-calculate-the-center-of-the-bounding-box
-    ex: in: geolocations = ((lat1,lon1), (lat2,lon2))
-        out: (center_lat, center_lon)
-    """
-    x = 0
-    y = 0
-    z = 0
-
-    for lat, lon in geolocations:
-        lat = float(lat)
-        lon = float(lon)
-        x += cos(lat) * cos(lon)
-        y += cos(lat) * sin(lon)
-        z += sin(lat)
-
-    x = float(x / len(geolocations))
-    y = float(y / len(geolocations))
-    z = float(z / len(geolocations))
-
-    return (atan2(y, x), atan2(z, sqrt(x * x + y * y)))
 
 
 def generateGeometryFromBbox(bbox):
@@ -135,10 +119,44 @@ def generateGeometryFromBbox(bbox):
 
     return boxA
 
+def getDistance(startingpoint, endpoint):
+    """
+    input: in WGS84 - startingpoint[lat, lon], endpoint[lat, lon]
+    """
+    # @see http://www.movable-type.co.uk/scripts/latlong.html
+    radius = 6371
+    radLat1 = (startingpoint[0] * pi) / 180
+    radLat2 = (endpoint[0] * pi) / 180
+    deltLat = ((endpoint[0] - startingpoint[0]) * pi ) / 180
+    deltLon = ((endpoint[1] - startingpoint[1]) * pi ) / 180
+
+    a = sin(deltLat / 2) * sin(deltLat / 2) + cos(radLat1) * cos(radLat2) * sin(deltLon / 2) * sin(deltLon / 2)
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    d = radius * c
+    # print(d)
+    return d
+
+def getMidPoint(bbox):
+    line1 = "LINESTRING (%f %f, %f %f)" % (bbox[0], bbox[1], bbox[2], bbox[3])
+    line2 = "LINESTRING (%f %f, %f %f)" % (bbox[2], bbox[1], bbox[0], bbox[3])
+
+    line1 = ogr.CreateGeometryFromWkt(line1)
+    line2 = ogr.CreateGeometryFromWkt(line2)
+
+    intersectionPoint = line1.Intersection(line2)
+    intersectGeometry = ogr.CreateGeometryFromWkt(intersectionPoint.ExportToWkt())
+
+    # print(intersectGeometry)
+    return intersectGeometry
+
+
 
 bbox1 = [13.0078125, 50.62507306341435, 5.44921875, 45.82879925192134]
 bbox2 = [17.7978515625, 52.09300763963822, 7.27294921875, 46.14939437647686]
-similarArea(bbox1, bbox2)
+spatialDistance(bbox1, bbox2)
+
+
+# getDistance(point1, point2)
 
 # wkt = "POLYGON ((1162440.5712740074 672081.4332727483, 1162440.5712740074 647105.5431482664, 1195279.2416228633 647105.5431482664, 1195279.2416228633 672081.4332727483, 1162440.5712740074 672081.4332727483))"
 # poly = ogr.CreateGeometryFromWkt(wkt)
