@@ -28,13 +28,13 @@ from datetime import date
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="File name with extension")
 def main(path, name):
-    res = getTimeExtend()(name, path)
+    res = getTimeExtent()(name, path)
     if res[0] != None:
         click.echo(res[0])
     else:
         click.echo(res[1])
 
-def getTimeExtend(name, path):
+def getTimeExtent(name, path):
     """
     returns the bounding Box of supported Datatypes and standards in WGS84.
     
@@ -49,7 +49,7 @@ def getTimeExtend(name, path):
     filepath = "%s\%s" % (path, name)
     # get file extension
     filename, file_extension = os.path.splitext(filepath)
-    print(file_extension)
+    # print(file_extension)
     # netCDF handeling
     if file_extension == ".nc":
         try:
@@ -68,9 +68,8 @@ def getTimeExtend(name, path):
                 
                 avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
                 # avgInt = math.floor(avgInt*1000)/1000
-                print(avgInt)
+                # print(avgInt)
             
-            click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
             return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt],None)
 
             
@@ -127,9 +126,8 @@ def getTimeExtend(name, path):
                 
                 avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
                 # avgInt = math.floor(avgInt*1000)/1000
-                print(avgInt)
+                # print(avgInt)
             
-                click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
                 return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt], None)
 
             # in case the words are separated by a ';' insted of a comma
@@ -151,9 +149,8 @@ def getTimeExtend(name, path):
                     
                     avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
                     # avgInt = math.floor(avgInt*1000)/1000
-                    print(avgInt)
+                    # print(avgInt)
                 
-                    click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
                     return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt], None)
                 # the csv is not valid
                 except KeyError:
@@ -189,9 +186,8 @@ def getTimeExtend(name, path):
                 interval.append(isoTimeSeq[i+1] - isoTimeSeq[i])
             
             avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
-            print(avgInt)
+            # print(avgInt)
         
-            click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
             return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt], None)
         else:
             prop = ""
@@ -204,7 +200,6 @@ def getTimeExtend(name, path):
 
             timeext = jsonDict["properties"]["time"]
             timeext = DateTime(timeext)
-            click.echo([timeext, timeext, 0])
             return ([timeext, timeext, 0], None)
 
 
@@ -217,7 +212,7 @@ def getTimeExtend(name, path):
                     """)
             row = c.fetchone()
             row = list(map(DateTime, row))
-            print(row)
+            # print(row)
             return ([row[0], row[0], 0], None)
         except:
             return (None, "File Error!")

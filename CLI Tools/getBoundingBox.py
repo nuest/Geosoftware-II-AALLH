@@ -267,22 +267,21 @@ def getBoundingBox(name, path):
         try:
             # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
             # convert the gml file to a GeoJSON file
-            ogr2ogr.main(["","-f", "GeoJSON", "output.json", filepath])
+            ogr2ogr.main(["","-f", "GeoJSON", "%s.json" % (name), filepath])
             # srcDS = gdal.OpenEx(filepath)
             # ds = gdal.VectorTranslate('output.json', srcDS, format='GeoJSON')
 
             # get boundingbox from generated GeoJSON file
-            myGeojson = pygeoj.load(filepath="output.json")
+            myGeojson = pygeoj.load(filepath="%s.json"%name)
             click.echo(myGeojson.bbox)
             # delete generated GeoJSON file
-            os.remove("output.json")
             return (myGeojson.bbox, None)
         # errors
         except:
             return (None, "file not found or your gml/xml/kml data is not valid")
         finally:
             try:
-                os.remove("output.json")
+                os.remove("%s.json"%name)
             except:
                 pass
                 
