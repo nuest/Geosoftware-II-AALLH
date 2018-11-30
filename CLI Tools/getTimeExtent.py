@@ -228,8 +228,8 @@ def getTimeExtend(name, path):
                 pass
 
     elif file_extension == ".tif" or file_extension == ".tiff":
-        ds =  gdal.Open(filepath)
-        print(gdal.Info(ds))
+        # ds =  gdal.Open(filepath)
+        # print(gdal.Info(ds))
         return (None, "Filetype %s not yet supported" % file_extension)
     
     else:

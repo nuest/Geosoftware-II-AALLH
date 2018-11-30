@@ -10,3 +10,5 @@ map\.html
 similaritycalculation/squere\.svg
 
 CLI Tools/__pycache__/
+
+*.code-workspace
