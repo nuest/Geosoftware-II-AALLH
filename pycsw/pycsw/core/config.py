@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -260,11 +260,19 @@ class StaticContext(object):
                         },
                         'parameters': {
                         }
+                    },
+                    'ExtractMetadata': {
+                        'methods': {
+                            'get': False,
+                            'post': True,
+                        },
+                        'parameters': {
+                        }
                     }
                 },
                 'parameters': {
                     'version': {
-                        'values': ['2.0.2', '3.0.0']
+                        'values': ['2.0.2', '3.0.0', '']
                     },
                     'service': {
                         'values': ['CSW']
@@ -335,7 +343,7 @@ class StaticContext(object):
             'csw30': {
                 'operations_order': [
                     'GetCapabilities', 'GetDomain', 'GetRecords',
-                    'GetRecordById', 'GetRepositoryItem'
+                    'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -345,7 +353,7 @@ class StaticContext(object):
                         },
                         'parameters': {
                             'acceptVersions': {
-                                'values': ['2.0.2', '3.0.0']
+                                'values': ['2.0.2', '3.0.0', '']
                             },
                             'acceptFormats': {
                                 'values': ['text/xml', 'application/xml']
@@ -405,11 +413,19 @@ class StaticContext(object):
                         },
                         'parameters': {
                         }
+                    },
+                    'ExtractMetadata': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
                     }
                 },
                 'parameters': {
                     'version': {
-                        'values': ['2.0.2', '3.0.0']
+                        'values': ['2.0.2', '3.0.0', '']
                     },
                     'service': {
                         'values': ['CSW']
