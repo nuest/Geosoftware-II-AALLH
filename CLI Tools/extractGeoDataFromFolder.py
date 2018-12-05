@@ -1,7 +1,10 @@
 """
 @Author Henry Fock
 """
-
+import sys
+# add local modules folder
+file_path = '../Python_Modules'
+sys.path.append(file_path)
 
 import getBoundingBox as box
 import getTimeExtent as timeEx
@@ -52,7 +55,7 @@ class CliTools(threading.Thread):
 
     def run(self):
         bbox = box.getBoundingBox(path=self.path, name=self.name)
-        time = timeEx.getTimeExtend(path=self.path, name=self.name)
+        time = timeEx.getTimeExtent(path=self.path, name=self.name)
         self.result.extend([self.name, bbox, time])
 
 
