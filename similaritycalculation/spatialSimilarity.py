@@ -84,6 +84,9 @@ def spatialDistance(bboxA, bboxB):
 
 
 def _generateGeometryFromBbox(bbox):
+    """ 
+    Transformiert eine Boundingbox in eine gdal Geometrie in eine Projektion mit der gdal arbeitet
+    """
     source = osr.SpatialReference()
     source.ImportFromEPSG(4326)
     target = osr.SpatialReference()
