@@ -48,14 +48,16 @@ from pycsw import oaipmh, opensearch, sru
 from pycsw.plugins.profiles import profile as pprofile
 import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
+
+# die sind klar
 from pycsw.ogc.csw import csw2, csw3
+from pycsw.ahl import api_functions
 
 LOGGER = logging.getLogger(__name__)
 
-
 class Csw(object):
     """ Base CSW server """
-    def __init__(self, rtconfig=None, env=None, version='3.0.0'):
+    def __init__(self, rtconfig=None, env=None, version=''):
         """ Initialize CSW """
 
         if not env:
@@ -92,13 +94,17 @@ class Csw(object):
         self.process_time_start = time()
 
         # define CSW implementation object (default CSW3)
-        self.iface = csw3.Csw3(server_csw=self)
+        self.iface = api_functions.Api(server_api=self)
         self.request_version = version
 
         if self.request_version == '2.0.2':
             self.iface = csw2.Csw2(server_csw=self)
             self.context.set_model('csw')
-
+        
+        elif self.request_version == '3.0.0':
+            self.iface = csw3.Csw3(server_csw=self)
+            self.context.set_model('csw')
+        
         # load user configuration
         try:
             LOGGER.info('Loading user configuration')
@@ -269,7 +275,7 @@ class Csw(object):
             self.oaipmhobj = oaipmh.OAIPMH(self.context, self.config)
         return self.oaipmhobj
 
-    def dispatch(self, writer=sys.stdout, write_headers=True):
+    def dispatch(self, writer=sys.stdout, write_headers=True):#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         """ Handle incoming HTTP request """
 
         error = 0
@@ -486,22 +492,22 @@ class Csw(object):
                     error = 1
                     locator = 'service'
                     code = 'InvalidParameterValue'
-                    text = 'You are stupid! Invalid value for service: %s.\
+                    text = 'Invalid value for service: %s.\
                     Value MUST be CSW' % self.kvp['service']
 
                 # test version
-                kvp_version = self.kvp.get('version', '')
-                try:
-                    kvp_version_integer = util.get_version_integer(kvp_version)
-                except Exception as err:
-                    kvp_version_integer = 'invalid_value'
-                if (request != 'GetCapabilities' and
-                        kvp_version_integer != own_version_integer):
-                    error = 1
-                    locator = 'version'
-                    code = 'InvalidParameterValue'
-                    text = ('Invalid value for version: %s. Value MUST be '
-                            '2.0.2 or 3.0.0' % kvp_version)
+                #kvp_version = self.kvp.get('version', '')
+                #try:
+                    #kvp_version_integer = util.get_version_integer(kvp_version)
+                #except Exception as err:
+                    #kvp_version_integer = 'invalid_value'
+                #if (request != 'GetCapabilities' and
+                        #kvp_version_integer != own_version_integer):
+                    #error = 1
+                    #locator = 'version'
+                    #code = 'InvalidParameterValue'
+                    #text = ('Invalid value for version: %s. Value MUST be '
+                            #'2.0.2 or 3.0.0' % kvp_version)
 
                 # check for GetCapabilities acceptversions
                 if 'acceptversions' in self.kvp:
@@ -547,6 +553,8 @@ class Csw(object):
 
             if self.kvp['request'] == 'GetCapabilities':
                 self.response = self.iface.getcapabilities()
+            elif self.kvp['request'] == 'ExtractMetadata':
+                self.response = self.iface.extractmetadata()
             elif self.kvp['request'] == 'DescribeRecord':
                 self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
@@ -575,7 +583,7 @@ class Csw(object):
                     'Invalid request parameter: %s' % self.kvp['request']
                 )
 
-        LOGGER.info('Request processed')
+        LOGGER.info('Request processed')#bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
         if self.mode == 'sru':
             LOGGER.info('SRU mode detected; processing response.')
             self.response = self.sru().response_csw2sru(self.response,
@@ -593,6 +601,9 @@ class Csw(object):
             )
 
         return self._write_response()
+
+    def extractmetadata(self):
+        return self.iface.extractmetadata()
 
     def getcapabilities(self):
         """ Handle GetCapabilities request """
@@ -634,6 +645,19 @@ class Csw(object):
         appinfo = ''
 
         LOGGER.info('Writing response.')
+
+        import webbrowser
+
+        # neuer code für unsere API html anzeigen zu können TAN
+        if self.response == 'a':
+            print('ja')
+            
+            new = 2 # open in a new tab, if possible
+
+            url = "'/usr/lib/python3.5/site-packages/pycsw/test.html'"
+            webbrowser.open(url,new=new)
+            #open('/usr/lib/python3.5/site-packages/pycsw/test.html')
+            print('nein')
 
         if hasattr(self, 'soap') and self.soap:
             self._gen_soap_wrapper()
@@ -738,6 +762,7 @@ class Csw(object):
                 'methods': {'get': False, 'post': True},
                 'parameters': {}
             }
+            
 
             schema_values = [
                 'http://www.opengis.net/cat/csw/2.0.2',

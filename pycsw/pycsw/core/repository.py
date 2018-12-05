@@ -108,6 +108,7 @@ class Repository(object):
 
         schema_name, table_name = table.rpartition(".")[::2]
 
+
         self.dataset = type(
             'dataset',
             (base,),
@@ -117,6 +118,7 @@ class Repository(object):
                     "autoload": True,
                     "schema": schema_name or None,
                 },
+
             }
         )
 
@@ -202,6 +204,14 @@ class Repository(object):
 
     def query_ids(self, ids):
         ''' Query by list of identifiers '''
+
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # connection to database 
+        import sqlite3
+        conn = sqlite3.connect('../../db-data/data.db')
+        c = conn.cursor()
+        c.execute('SELECT record1 FROM similarities WHERE record1 = 1')
+        print(c.fetchone())
 
         column = getattr(self.dataset, \
         self.context.md_core_model['mappings']['pycsw:Identifier'])

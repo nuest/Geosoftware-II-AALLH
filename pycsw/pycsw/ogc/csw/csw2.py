@@ -423,6 +423,13 @@ class Csw2(object):
 
         return node
 
+    def getmap(self):
+        print ('Hello, world!')
+        import webbrowser
+        url = 'map.html'
+
+        return '<html><body>test</body></html>'
+
     def describerecord(self):
         ''' Handle DescribeRecord request '''
 
@@ -2020,3 +2027,4 @@ def write_boundingbox(bbox, nsmap):
             return None
     else:
         return None
+
