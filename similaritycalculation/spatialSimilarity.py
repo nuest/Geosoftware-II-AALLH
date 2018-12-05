@@ -61,25 +61,36 @@ def similarArea(bboxA, bboxB):
 
 
 def spatialDistance(bboxA, bboxB):
-    centerA = _getMidPoint(bboxA)
-    centerB = _getMidPoint(bboxB)
+    distBetweenCenterPoints = None
+    longerDistance = None
+    if (bboxA[1:] == bboxA[:-1]) and (bboxB[1:] == bboxB[:-1]):
+        distBetweenCenterPoints = _getDistance((bboxA[0], bboxA[1]),(bboxB[0], bboxB[1]))
+        longerDistance = 5
 
-    distA = _getDistance((bboxA[1], bboxA[0]), (bboxA[3], bboxA[2]))
-    distB = _getDistance((bboxB[1], bboxB[0]), (bboxB[3], bboxB[2]))
+    else:    
+        centerA = _getMidPoint(bboxA)
+        centerB = _getMidPoint(bboxB)
 
-    print(distA, distB)
+        distA = _getDistance((bboxA[1], bboxA[0]), (bboxA[3], bboxA[2]))
+        distB = _getDistance((bboxB[1], bboxB[0]), (bboxB[3], bboxB[2]))
 
-    longerDistance = distA if distA >= distB else distB
+        print(distA, distB)
 
-    print(longerDistance)
+        longerDistance = distA if distA >= distB else distB
 
-    distBetweenCenterPoints = _getDistance((centerA.GetY(), centerA.GetX()),(centerB.GetY(), centerB.GetX()))
-    print(distBetweenCenterPoints)
+        print(longerDistance)
 
-    distPercentage = (1 - (distBetweenCenterPoints/longerDistance)) * 100
-    distPercentage = floor(distPercentage * 100)/100
-    print(distPercentage if distPercentage>0 else 0)
-    return distPercentage if distPercentage>0 else 0
+        distBetweenCenterPoints = _getDistance((centerA.GetY(), centerA.GetX()),(centerB.GetY(), centerB.GetX()))
+        print(distBetweenCenterPoints)
+
+    if distBetweenCenterPoints != None and longerDistance != None:
+        distPercentage = (1 - (distBetweenCenterPoints/longerDistance)) * 100
+        distPercentage = floor(distPercentage * 100)/100
+        print(distPercentage if distPercentage>0 else 0)
+        return distPercentage if distPercentage>0 else 0
+    else:
+        print("Error while processing")
+        return 0
 
 
 
