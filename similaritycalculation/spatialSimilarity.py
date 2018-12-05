@@ -9,8 +9,8 @@ sys.path.append(file_path)
 from osgeo import gdal, ogr, osr
 
 def spatialOverlap(bboxA, bboxB):
-    boxA = generateGeometryFromBbox(bboxA)
-    boxB = generateGeometryFromBbox(bboxB)
+    boxA = _generateGeometryFromBbox(bboxA)
+    boxB = _generateGeometryFromBbox(bboxB)
 
     print(boxA)
 
@@ -36,8 +36,8 @@ def spatialOverlap(bboxA, bboxB):
 
 
 def similarArea(bboxA, bboxB):
-    boxA = generateGeometryFromBbox(bboxA)
-    boxB = generateGeometryFromBbox(bboxB)
+    boxA = _generateGeometryFromBbox(bboxA)
+    boxB = _generateGeometryFromBbox(bboxB)
 
     print(boxA)
 
@@ -60,13 +60,12 @@ def similarArea(bboxA, bboxB):
     return reachedPercentArea
 
 
-# funktioniert noch nicht
 def spatialDistance(bboxA, bboxB):
-    centerA = getMidPoint(bboxA)
-    centerB = getMidPoint(bboxB)
+    centerA = _getMidPoint(bboxA)
+    centerB = _getMidPoint(bboxB)
 
-    distA = getDistance((bboxA[1], bboxA[0]), (bboxA[3], bboxA[2]))
-    distB = getDistance((bboxB[1], bboxB[0]), (bboxB[3], bboxB[2]))
+    distA = _getDistance((bboxA[1], bboxA[0]), (bboxA[3], bboxA[2]))
+    distB = _getDistance((bboxB[1], bboxB[0]), (bboxB[3], bboxB[2]))
 
     print(distA, distB)
 
@@ -74,7 +73,7 @@ def spatialDistance(bboxA, bboxB):
 
     print(longerDistance)
 
-    distBetweenCenterPoints = getDistance((centerA.GetY(), centerA.GetX()),(centerB.GetY(), centerB.GetX()))
+    distBetweenCenterPoints = _getDistance((centerA.GetY(), centerA.GetX()),(centerB.GetY(), centerB.GetX()))
     print(distBetweenCenterPoints)
 
     distPercentage = (1 - (distBetweenCenterPoints/longerDistance)) * 100
@@ -84,7 +83,7 @@ def spatialDistance(bboxA, bboxB):
 
 
 
-def generateGeometryFromBbox(bbox):
+def _generateGeometryFromBbox(bbox):
     source = osr.SpatialReference()
     source.ImportFromEPSG(4326)
     target = osr.SpatialReference()
@@ -119,7 +118,7 @@ def generateGeometryFromBbox(bbox):
 
     return boxA
 
-def getDistance(startingpoint, endpoint):
+def _getDistance(startingpoint, endpoint):
     """
     input: in WGS84 - startingpoint[lat, lon], endpoint[lat, lon]
     """
@@ -136,7 +135,7 @@ def getDistance(startingpoint, endpoint):
     # print(d)
     return d
 
-def getMidPoint(bbox):
+def _getMidPoint(bbox):
     line1 = "LINESTRING (%f %f, %f %f)" % (bbox[0], bbox[1], bbox[2], bbox[3])
     line2 = "LINESTRING (%f %f, %f %f)" % (bbox[2], bbox[1], bbox[0], bbox[3])
 
@@ -156,7 +155,7 @@ bbox2 = [17.7978515625, 52.09300763963822, 7.27294921875, 46.14939437647686]
 spatialDistance(bbox1, bbox2)
 
 
-# getDistance(point1, point2)
+# _getDistance(point1, point2)
 
 # wkt = "POLYGON ((1162440.5712740074 672081.4332727483, 1162440.5712740074 647105.5431482664, 1195279.2416228633 647105.5431482664, 1195279.2416228633 672081.4332727483, 1162440.5712740074 672081.4332727483))"
 # poly = ogr.CreateGeometryFromWkt(wkt)

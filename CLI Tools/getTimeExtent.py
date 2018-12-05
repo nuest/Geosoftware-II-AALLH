@@ -28,7 +28,7 @@ from datetime import date
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="File name with extension")
 def main(path, name):
-    res = getTimeExtent()(name, path)
+    res = getTimeExtent(name, path)
     if res[0] != None:
         click.echo(res[0])
     else:
@@ -70,7 +70,7 @@ def getTimeExtent(name, path):
                 # avgInt = math.floor(avgInt*1000)/1000
                 # print(avgInt)
             
-            return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt],None)
+            return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt],None)
 
             
         # errors
@@ -128,7 +128,7 @@ def getTimeExtent(name, path):
                 # avgInt = math.floor(avgInt*1000)/1000
                 # print(avgInt)
             
-                return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt], None)
+                return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
 
             # in case the words are separated by a ';' insted of a comma
             except KeyError:
@@ -151,7 +151,7 @@ def getTimeExtent(name, path):
                     # avgInt = math.floor(avgInt*1000)/1000
                     # print(avgInt)
                 
-                    return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt], None)
+                    return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
                 # the csv is not valid
                 except KeyError:
                     return (None, "Pleas seperate your data with either ',' or ';'!" )
@@ -188,7 +188,7 @@ def getTimeExtent(name, path):
             avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
             # print(avgInt)
         
-            return ([isoTimeSeq[0], isoTimeSeq[-1], avgInt], None)
+            return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
         else:
             prop = ""
             if "time" in jsonDict:
@@ -213,7 +213,7 @@ def getTimeExtent(name, path):
             row = c.fetchone()
             row = list(map(DateTime, row))
             # print(row)
-            return ([row[0], row[0], 0], None)
+            return ([str(row[0]), str(row[0]), 0], None)
         except:
             return (None, "File Error!")
         finally:
