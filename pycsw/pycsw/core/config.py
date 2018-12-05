@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata', 'GetDataFromDB'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -263,7 +263,7 @@ class StaticContext(object):
                     },
                     'ExtractMetadata': {
                         'methods': {
-                            'get': False,
+                            'get': True,
                             'post': True,
                         },
                         'parameters': {

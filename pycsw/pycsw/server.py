@@ -96,9 +96,9 @@ class Csw(object):
         self.iface = api_functions.Api(server_api=self)
         self.request_version = version
 
-        if self.request_version == '2.0.2':
-            self.iface = csw2.Csw2(server_csw=self)
-            self.context.set_model('csw')
+        #if self.request_version == '2.0.2':
+           # self.iface = csw2.Csw2(server_csw=self)
+            #self.context.set_model('csw')
         
         # load user configuration
         try:
@@ -546,8 +546,8 @@ class Csw(object):
                     import uuid
                     self.kvp['requestid'] = str(uuid.uuid4())
 
-            if self.kvp['request'] == 'GetCapabilities':
-                self.response = self.iface.getcapabilities()
+           # if self.kvp['request'] == 'GetCapabilities':
+            #    self.response = self.iface.getcapabilities()
             elif self.kvp['request'] == 'ExtractMetadata':
                 self.response = self.iface.extractmetadata()
             elif self.kvp['request'] == 'DescribeRecord':
@@ -598,7 +598,8 @@ class Csw(object):
         return self._write_response()
 
     def extractmetadata(self):
-        """ Handle GetCapabilities request """
+        """ Handle ExtractMetadata request """
+        print('serverpy extraxtmd')
         return self.iface.extractmetadata()
 
     def getcapabilities(self):
@@ -644,7 +645,7 @@ class Csw(object):
 
         # neuer code für unsere API html anzeigen zu können TANDIK
         if isinstance(self.response, str):
-            f_path = abspath("page.html")
+            f_path = abspath('/usr/lib/python3.5/site-packages/pycsw/page.html')
             if exists(f_path):
                 with open(f_path) as f:
                     print(f.read())

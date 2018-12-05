@@ -16,6 +16,7 @@ from pycsw.ogc.fes import fes1
 import logging
 import requests
 from urllib.request import urlopen
+import codecs
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class Api(object):
         ''' Initialize Api '''
 
         self.parent = server_api
+
 
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''
@@ -391,12 +393,12 @@ class Api(object):
             self.parent.context.namespaces))
 
         return node
-
+    
     def extractmetadata(self):
-        print('Hallo ANika')
-        k = 'bc'
-        return k
-        
+        print(os.getcwd())
+        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
+        print(f.read())
+
     def exceptionreport(self, code, locator, text):
         ''' Generate ExceptionReport '''
         self.parent.exception = True
@@ -433,3 +435,100 @@ class Api(object):
 
         return node
 
+    def getrecordbyid(self, raw=False):
+        ''' Handle GetRecordById request '''
+
+        if 'id' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'id',
+            'Missing id parameter')
+        if len(self.parent.kvp['id']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'id',
+            'Invalid id parameter')
+        if 'outputschema' not in self.parent.kvp:
+            self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
+
+        if self.parent.requesttype == 'GET':
+            self.parent.kvp['id'] = self.parent.kvp['id'].split(',')
+
+        if ('outputformat' in self.parent.kvp and
+            self.parent.kvp['outputformat'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputFormat']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputformat', 'Invalid outputformat parameter %s' %
+            self.parent.kvp['outputformat'])
+
+        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputSchema']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputschema', 'Invalid outputschema parameter %s' %
+            self.parent.kvp['outputschema'])
+
+        if 'elementsetname' not in self.parent.kvp:
+            self.parent.kvp['elementsetname'] = 'summary'
+        else:
+            if (self.parent.kvp['elementsetname'] not in
+                self.parent.context.model['operations']['GetRecordById']['parameters']
+                ['ElementSetName']['values']):
+                return self.exceptionreport('InvalidParameterValue',
+                'elementsetname', 'Invalid elementsetname parameter %s' %
+                self.parent.kvp['elementsetname'])
+
+        node = etree.Element(util.nspath_eval('csw:GetRecordByIdResponse',
+        self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
+
+        node.attrib[util.nspath_eval('xsi:schemaLocation',
+        self.parent.context.namespaces)] = '%s %s/csw/2.0.2/CSW-discovery.xsd' % \
+        (self.parent.context.namespaces['csw'], self.parent.config.get('server', 'ogc_schemas_base'))
+
+        # query repository
+        LOGGER.info('Querying repository with ids: %s', self.parent.kvp['id'][0])
+        results = self.parent.repository.query_ids(self.parent.kvp['id'])
+
+        if raw:  # GetRepositoryItem request
+            LOGGER.debug('GetRepositoryItem request')
+            if len(results) > 0:
+                return etree.fromstring(util.getqattr(results[0],
+                self.parent.context.md_core_model['mappings']['pycsw:XML']), self.parent.context.parser)
+
+        for result in results:
+            if (util.getqattr(result,
+            self.parent.context.md_core_model['mappings']['pycsw:Typename']) == 'csw:Record'
+            and self.parent.kvp['outputschema'] ==
+            'http://www.opengis.net/cat/csw/2.0.2'):
+                # serialize record inline
+                node.append(self._write_record(
+                result, self.parent.repository.queryables['_all']))
+            elif (self.parent.kvp['outputschema'] ==
+                'http://www.opengis.net/cat/csw/2.0.2'):
+                # serialize into csw:Record model
+                typename = None
+
+                for prof in self.parent.profiles['loaded']:  # find source typename
+                    if self.parent.profiles['loaded'][prof].typename in \
+                    [util.getqattr(result, self.parent.context.md_core_model['mappings']['pycsw:Typename'])]:
+                        typename = self.parent.profiles['loaded'][prof].typename
+                        break
+
+                if typename is not None:
+                    util.transform_mappings(
+                        self.parent.repository.queryables['_all'],
+                        self.parent.context.model['typenames'][typename][
+                            'mappings']['csw:Record']
+                    )
+
+                node.append(self._write_record(
+                result, self.parent.repository.queryables['_all']))
+            elif self.parent.kvp['outputschema'] in self.parent.outputschemas.keys():  # use outputschema serializer
+                node.append(self.parent.outputschemas[self.parent.kvp['outputschema']].write_record(result, self.parent.kvp['elementsetname'], self.parent.context, self.parent.config.get('server', 'url')))
+            else:  # it's a profile output
+                node.append(
+                self.parent.profiles['loaded'][self.parent.kvp['outputschema']].write_record(
+                result, self.parent.kvp['elementsetname'],
+                self.parent.kvp['outputschema'], self.parent.repository.queryables['_all']))
+
+        if raw and len(results) == 0:
+            return None
+
+        return node
