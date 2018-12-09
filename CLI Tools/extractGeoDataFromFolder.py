@@ -34,18 +34,21 @@ def main(path):
         thread.join()
         res.append(thread.result)
 
+    output = []
     click.echo("\nErgebnis:")
     for x in res:
         if x[1][0] == None:
             if x[2][0] == None:
-                click.echo((x[0], x[1][1], x[2][1]))
+                output.append([x[0], x[1][1], x[2][1]])
             else:
-                click.echo((x[0], x[1][1], x[2][0]))
+                output.append([x[0], x[1][1], x[2][0]])
         else:
             if x[2][0] == None:
-                click.echo((x[0], x[1][0], x[2][1]))
+                output.append([x[0], x[1][0], x[2][1]])
             else:
-                click.echo((x[0], x[1][0], x[2][0]))
+                output.append([x[0], x[1][0], x[2][0]])
+
+    click.echo(tabulate(output, headers=['Filename', 'Boundingbox(minX/Lon, minY/Lat, maxX, maxY)/Error', 'Timeextent(stard, end, Ø-interval in days)/Error']))
 
     # Create a geometry collection
     geomcol =  ogr.Geometry(ogr.wkbGeometryCollection)
@@ -69,7 +72,8 @@ def main(path):
     
     env = geomcol.GetEnvelope()
     click.echo("\nFull spatial Extent as Boundingbox: %s" % str((env[0], env[2], env[1], env[3])))
-    click.echo("\nFull time Extend as ISO8601: %s" % str((str(lowTime), str(maxTime))))
+    click.echo("Full time Extend as ISO8601: %s" % str((str(lowTime), str(maxTime))))
+    click.echo("\n")
 
 
 
