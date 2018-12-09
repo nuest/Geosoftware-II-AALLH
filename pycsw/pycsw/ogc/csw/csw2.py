@@ -423,12 +423,105 @@ class Csw2(object):
 
         return node
 
-    def getmap(self):
-        print ('Hello, world!')
-        import webbrowser
-        url = 'map.html'
+    def getsimilarrecords(self):
+        ''' Handle GetSimilarRecords request, @author: Anika Graupner '''
+       
+        print('GetSimilarRecords wird ausgeführt')
 
-        return '<html><body>test</body></html>'
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # connection to database 
+        # @author: Aysel Tandik, Anika Graupner
+        import sqlite3
+        conn = sqlite3.connect('../../db-data/data.db')
+        print(conn)
+        c = conn.cursor()
+
+        ''' Handle GetRecordById request '''
+        # wenn kein Parameter für die ID angegeben wird, es also kein id= gibt 
+        if 'id' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'id',
+            'Missing id parameter')
+
+        # wenn es id= gibt, aber keinen Wert dahinter 
+        if len(self.parent.kvp['id']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'id',
+            'Invalid id parameter')
+
+        # wenn es kein outputschema= gibt, ist das schema csw 
+        if 'outputschema' not in self.parent.kvp:
+            self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
+
+        # vll wenn mehrere ids angebeben werden....
+        if self.parent.requesttype == 'GET':
+            self.parent.kvp['id'] = self.parent.kvp['id'].split(',')
+
+        # wenn ein falsches outputformat angegeben ist 
+        if ('outputformat' in self.parent.kvp and
+            self.parent.kvp['outputformat'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputFormat']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputformat', 'Invalid outputformat parameter %s' %
+            self.parent.kvp['outputformat'])
+
+        # wenn ein falsches outputschema angegeben ist 
+        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputSchema']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputschema', 'Invalid outputschema parameter %s' %
+            self.parent.kvp['outputschema'])
+
+
+        if 'elementsetname' not in self.parent.kvp:
+            self.parent.kvp['elementsetname'] = 'summary'
+        else:
+            if (self.parent.kvp['elementsetname'] not in
+                self.parent.context.model['operations']['GetRecordById']['parameters']
+                ['ElementSetName']['values']):
+                return self.exceptionreport('InvalidParameterValue',
+                'elementsetname', 'Invalid elementsetname parameter %s' %
+                self.parent.kvp['elementsetname'])
+    
+        # erster knoten, kann man übernehmen 
+        node = etree.Element(util.nspath_eval('csw:GetSimilarRecordsResponse',
+        self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
+
+        # zweiter knoten, kann man übernehmen 
+        node.attrib[util.nspath_eval('xsi:schemaLocation',
+        self.parent.context.namespaces)] = '%s %s/csw/2.0.2/CSW-discovery.xsd' % \
+        (self.parent.context.namespaces['csw'], self.parent.config.get('server', 'ogc_schemas_base'))
+
+        # query repository
+        LOGGER.info('Querying repository with ids: %s', self.parent.kvp['id'][0])
+        # hier werden die ids aus dem Repository abgefragt und in results gespeichert  
+        results = self.parent.repository.query_ids(self.parent.kvp['id'])
+
+        requestID = self.parent.kvp['id'][0]
+
+        c.execute('SELECT record1, record2 FROM similarities WHERE record1 = '+ requestID +'')
+        
+        values = c.fetchone()
+
+        # or Exception?
+        if not values:
+            etree.SubElement(node, 'ListOfSimilarRecords', records='No similar records!')
+        
+        else:
+            valuesList = []
+            i = 0
+            while i < len(values):
+                print(values[i])
+                valuesList.append(values[i])
+                i += 1
+
+            stringList = ', '.join(map(str, valuesList))
+
+            print(stringList)
+            
+            etree.SubElement(node, 'ListOfSimilarRecords', records=stringList)
+       
+        return node
 
     def describerecord(self):
         ''' Handle DescribeRecord request '''
@@ -1002,6 +1095,17 @@ class Csw2(object):
 
     def getrecordbyid(self, raw=False):
         ''' Handle GetRecordById request '''
+
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # connection to database 
+        # @author: Aysel Tandik, Anika Graupner
+        import sqlite3
+        conn = sqlite3.connect('../../db-data/data.db')
+        print(conn)
+        c = conn.cursor()
+        c.execute('SELECT record1 FROM similarities WHERE record1 = 1')
+        print(c.fetchone())
+
 
         if 'id' not in self.parent.kvp:
             return self.exceptionreport('MissingParameterValue', 'id',

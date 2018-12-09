@@ -397,6 +397,17 @@ class Api(object):
         
 
     def getrecordbyid(self, raw=False):
+
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # connection to database 
+        # @author: Aysel Tandik, Anika Graupner
+        import sqlite3
+        conn = sqlite3.connect('../../db-data/data.db')
+        print(conn)
+        c = conn.cursor()
+        c.execute('SELECT record1 FROM similarities WHERE record1 = 1')
+        print(c.fetchone())
+
         ''' Handle GetRecordById request '''
         # wenn kein Parameter für die ID angegeben wird, es also kein id= gibt 
         if 'id' not in self.parent.kvp:
