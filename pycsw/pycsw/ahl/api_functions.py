@@ -17,6 +17,8 @@ import logging
 import requests
 from urllib.request import urlopen
 import codecs
+import sqlite3
+import click
 
 LOGGER = logging.getLogger(__name__)
 
@@ -395,9 +397,11 @@ class Api(object):
         return node
     
     def extractmetadata(self):
-        print(os.getcwd())
-        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
-        print(f.read())
+        #print(os.getcwd())
+        #f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
+        #return f.read()
+        stdout = click.open_file('-', 'w')
+        test_file = click.open_file('page.html', 'w')
 
     def exceptionreport(self, code, locator, text):
         ''' Generate ExceptionReport '''
@@ -532,3 +536,21 @@ class Api(object):
             return None
 
         return node
+
+
+
+    def DB_id(self, ids):
+        ''' Query by list of identifiers '''
+        print('aysel')
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # connection to database 
+        conn = sqlite3.connect('../../db-data/data.db')
+        c = conn.cursor()
+        c.execute('SELECT record1,record2 FROM similarities')
+        print(c.fetchone())
+
+        column = getattr(self.dataset, \
+        self.context.md_core_model['mappings']['pycsw:Identifier'])
+
+        query = self.session.query(self.dataset).filter(column.in_(ids))
+        return self._get_repo_filter(query).all()

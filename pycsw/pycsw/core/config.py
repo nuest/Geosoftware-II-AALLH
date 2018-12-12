@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata', 'GetDataFromDB'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata', 'ReadBBfromDB'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -268,7 +268,15 @@ class StaticContext(object):
                         },
                         'parameters': {
                         }
+                    },
+                    'ReadBBfromDB': {
+                        'methods': {
+                            'get': True,
+                            'post': True,
+                        'parameters': {
+                        }
                     }
+                 }
                 },
                 'parameters': {
                     'version': {
@@ -343,7 +351,7 @@ class StaticContext(object):
             'csw30': {
                 'operations_order': [
                     'GetCapabilities', 'GetDomain', 'GetRecords',
-                    'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata'
+                    'GetRecordById', 'GetRepositoryItem', 'ExtractMetadata', 'ReadBBfromDB'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -415,6 +423,14 @@ class StaticContext(object):
                         }
                     },
                     'ExtractMetadata': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
+                    },
+                    'ReadBBfromDB': {
                         'methods': {
                             'get': True,
                             'post': False,

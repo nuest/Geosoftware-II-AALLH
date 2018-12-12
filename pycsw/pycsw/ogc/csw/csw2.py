@@ -45,6 +45,8 @@ from pycsw.core import config, log, metadata, util
 from pycsw.core.formats.fmt_json import xml2dict
 from pycsw.ogc.fes import fes1
 import logging
+import sqlite3
+import codecs
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +58,79 @@ class Csw2(object):
 
         self.parent = server_csw
         self.version = '2.0.2'
+
+    # Hole Daten aus der DB und vergleiche die BB TAN
+    def readbbfromdb(self, raw=False):
+
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # connection to database 
+        print('readbbfromdb is done')
+        conn = sqlite3.connect('../../db-data/data.db')
+        c = conn.cursor()
+        #c.execute('Select wkt_geometry FROM records')
+        print(c.fetchone())
+
+        ''' Handle GetRecordById request '''
+
+        if 'id' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'id',
+            'Missing id parameter')
+        if len(self.parent.kvp['id']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'id',
+            'Invalid id parameter')
+        if 'outputschema' not in self.parent.kvp:
+            self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
+
+        if self.parent.requesttype == 'GET':
+            self.parent.kvp['id'] = self.parent.kvp['id'].split(',')
+
+        if ('outputformat' in self.parent.kvp and
+            self.parent.kvp['outputformat'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputFormat']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputformat', 'Invalid outputformat parameter %s' %
+            self.parent.kvp['outputformat'])
+
+        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputSchema']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputschema', 'Invalid outputschema parameter %s' %
+            self.parent.kvp['outputschema'])
+
+        if 'elementsetname' not in self.parent.kvp:
+            self.parent.kvp['elementsetname'] = 'summary'
+        else:
+            if (self.parent.kvp['elementsetname'] not in
+                self.parent.context.model['operations']['GetRecordById']['parameters']
+                ['ElementSetName']['values']):
+                return self.exceptionreport('InvalidParameterValue',
+                'elementsetname', 'Invalid elementsetname parameter %s' %
+                self.parent.kvp['elementsetname'])
+
+        node = etree.Element(util.nspath_eval('csw:GetRecordByIdResponse',
+        self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
+
+        node.attrib[util.nspath_eval('xsi:schemaLocation',
+        self.parent.context.namespaces)] = '%s %s/csw/2.0.2/CSW-discovery.xsd' % \
+        (self.parent.context.namespaces['csw'], self.parent.config.get('server', 'ogc_schemas_base'))
+
+        # query repository
+        LOGGER.info('Querying repository with ids: %s', self.parent.kvp['id'][0])
+        results = self.parent.repository.query_ids(self.parent.kvp['id'])
+        #hier weiter machen ab 12.12.2018
+
+
+    # Öffnen der Html page TAN
+    def extractmetadata(self):
+        print(os.getcwd())
+        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
+        return f.read()
+        #stdout = click.open_file('-', 'w')
+        #test_file = click.open_file('/usr/lib/python3.5/site-packages/pycsw/page.html', 'w')
+        #with click.open_file('page.html', 'w') as f:
+        #     f.write('Hello World!\n')
 
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''
@@ -994,6 +1069,13 @@ class Csw2(object):
             return node
 
     def getrecordbyid(self, raw=False):
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # authors: Anika, Aysel
+        # connection to database 
+        conn = sqlite3.connect('../../db-data/data.db')
+        c = conn.cursor()
+        c.execute('Select wkt_geometry FROM records')
+        print(c.fetchone())
         ''' Handle GetRecordById request '''
 
         if 'id' not in self.parent.kvp:

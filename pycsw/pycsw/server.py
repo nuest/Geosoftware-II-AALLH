@@ -49,7 +49,6 @@ from pycsw.plugins.profiles import profile as pprofile
 import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
 from pycsw.ogc.csw import csw2, csw3
-from pycsw.ahl import api_functions
 from os.path import abspath, exists
 
 LOGGER = logging.getLogger(__name__)
@@ -92,13 +91,13 @@ class Csw(object):
         self.language = {'639_code': 'en', 'text': 'english'}
         self.process_time_start = time()
 
-        # define CSW implementation object (default CSW3)
-        self.iface = api_functions.Api(server_api=self)
+        # define CSW implementation object (default CSW2)
+        self.iface = csw2.Csw2(server_csw=self)
         self.request_version = version
 
-        #if self.request_version == '2.0.2':
-           # self.iface = csw2.Csw2(server_csw=self)
-            #self.context.set_model('csw')
+        if self.request_version == '2.0.2':
+            self.iface = csw2.Csw2(server_csw=self)
+            self.context.set_model('csw')
         
         # load user configuration
         try:
@@ -546,10 +545,12 @@ class Csw(object):
                     import uuid
                     self.kvp['requestid'] = str(uuid.uuid4())
 
-           # if self.kvp['request'] == 'GetCapabilities':
-            #    self.response = self.iface.getcapabilities()
-            elif self.kvp['request'] == 'ExtractMetadata':
+            if self.kvp['request'] == 'GetCapabilities':
+                 self.response = self.iface.getcapabilities()
+            elif self.kvp['request'] == 'ExtractMetadata': # TANDIK
                 self.response = self.iface.extractmetadata()
+            elif self.kvp['request'] == 'ReadBBfromDB': # TANDIK
+                self.response = self.iface.readbbfromdb()
             elif self.kvp['request'] == 'DescribeRecord':
                 self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
@@ -597,10 +598,15 @@ class Csw(object):
 
         return self._write_response()
 
+    # TANDIK
     def extractmetadata(self):
         """ Handle ExtractMetadata request """
         print('serverpy extraxtmd')
         return self.iface.extractmetadata()
+
+    # TANDIK
+    def readbbfromdb(self):
+        return self.iface.readbbfromdb()
 
     def getcapabilities(self):
         """ Handle GetCapabilities request """
@@ -648,8 +654,7 @@ class Csw(object):
             f_path = abspath('/usr/lib/python3.5/site-packages/pycsw/page.html')
             if exists(f_path):
                 with open(f_path) as f:
-                    print(f.read())
-
+                    return f.read()
 
         if hasattr(self, 'soap') and self.soap:
             self._gen_soap_wrapper()
