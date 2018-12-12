@@ -13,7 +13,10 @@ import threading
 
 from os import listdir
 from os.path import isfile, join
+from osgeo import ogr
 import click
+from DateTime import DateTime
+from tabulate import tabulate
 
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
@@ -31,18 +34,47 @@ def main(path):
         thread.join()
         res.append(thread.result)
 
-    click.echo("\n Ergebnis:")
+    output = []
+    click.echo("\nErgebnis:")
     for x in res:
         if x[1][0] == None:
             if x[2][0] == None:
-                click.echo((x[0], x[1][1], x[2][1]))
+                output.append([x[0], x[1][1], x[2][1]])
             else:
-                click.echo((x[0], x[1][1], x[2][0]))
+                output.append([x[0], x[1][1], x[2][0]])
         else:
             if x[2][0] == None:
-                click.echo((x[0], x[1][0], x[2][1]))
+                output.append([x[0], x[1][0], x[2][1]])
             else:
-                click.echo((x[0], x[1][0], x[2][0]))
+                output.append([x[0], x[1][0], x[2][0]])
+
+    click.echo(tabulate(output, headers=['Filename', 'Boundingbox(minX/Lon, minY/Lat, maxX, maxY)/Error', 'Timeextent(stard, end, Ø-interval in days)/Error']))
+
+    # Create a geometry collection
+    geomcol =  ogr.Geometry(ogr.wkbGeometryCollection)
+    lowTime, maxTime = None, None 
+
+    for x in res:
+        if x[1][1] == None:
+            box = ogr.Geometry(ogr.wkbLineString)
+            box.AddPoint(x[1][0][0],x[1][0][1])
+            box.AddPoint(x[1][0][0], x[1][0][3])
+            box.AddPoint(x[1][0][2],x[1][0][1])
+            box.AddPoint(x[1][0][2], x[1][0][3])
+            geomcol.AddGeometry(box)
+        
+        if x[2][1] == None:
+            if lowTime == None or DateTime(x[2][0][0]) < lowTime:
+                lowTime = DateTime(x[2][0][0])
+            
+            if maxTime == None or DateTime(x[2][0][1]) > maxTime:
+                maxTime = DateTime(x[2][0][1])
+    
+    env = geomcol.GetEnvelope()
+    click.echo("\nFull spatial Extent as Boundingbox: %s" % str((env[0], env[2], env[1], env[3])))
+    click.echo("Full time Extend as ISO8601: %s" % str((str(lowTime), str(maxTime))))
+    click.echo("\n")
+
 
 
 
