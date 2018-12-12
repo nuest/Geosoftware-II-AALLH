@@ -2,3 +2,15 @@
 CLI Tools/Dockerfile
 
 Python_Modules/GDAL-2\.3\.2\.tar\.gz
+
+CLI Tools/miniBeispiel\.py
+
+map\.html
+
+similaritycalculation/squere\.svg
+
+CLI Tools/__pycache__/
+
+*.code-workspace
+
+CLI Tools/getAllMetadata\.py
