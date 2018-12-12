@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -268,6 +268,14 @@ class StaticContext(object):
                         },
                         'parameters': {
                         }
+                    },
+                    'OpenMap': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
                     }
                 },
                 'parameters': {
@@ -343,7 +351,7 @@ class StaticContext(object):
             'csw30': {
                 'operations_order': [
                     'GetCapabilities', 'GetDomain', 'GetRecords',
-                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords'
+                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -415,6 +423,14 @@ class StaticContext(object):
                         }
                     },
                     'GetSimilarRecords': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
+                    },
+                    'OpenMap': {
                         'methods': {
                             'get': True,
                             'post': False,

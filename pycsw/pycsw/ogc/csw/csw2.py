@@ -46,6 +46,8 @@ from pycsw.core.formats.fmt_json import xml2dict
 from pycsw.ogc.fes import fes1
 import logging
 
+from pycsw.modules import click
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -492,35 +494,108 @@ class Csw2(object):
         self.parent.context.namespaces)] = '%s %s/csw/2.0.2/CSW-discovery.xsd' % \
         (self.parent.context.namespaces['csw'], self.parent.config.get('server', 'ogc_schemas_base'))
 
-        # query repository
-        LOGGER.info('Querying repository with ids: %s', self.parent.kvp['id'][0])
-        # hier werden die ids aus dem Repository abgefragt und in results gespeichert  
-        results = self.parent.repository.query_ids(self.parent.kvp['id'])
-
         requestID = self.parent.kvp['id'][0]
 
-        c.execute('SELECT record1, record2 FROM similarities WHERE record1 = '+ requestID +'')
+        if 'similar' not in self.parent.kvp:
+            c.execute('SELECT record1, total_similarity FROM similarities WHERE record2 = '+ requestID +' AND total_similarity >= 51 UNION SELECT record2, total_similarity FROM similarities WHERE record1 = '+ requestID +' AND total_similarity >= 50 ORDER BY total_similarity DESC LIMIT 20')
         
-        values = c.fetchone()
+            values = c.fetchall()
 
-        # or Exception?
-        if not values:
-            etree.SubElement(node, 'ListOfSimilarRecords', records='No similar records!')
-        
-        else:
-            valuesList = []
-            i = 0
-            while i < len(values):
-                print(values[i])
-                valuesList.append(values[i])
-                i += 1
+            print(values)
 
-            stringList = ', '.join(map(str, valuesList))
-
-            print(stringList)
+            # if there are no similar records for the given id 
+            # or Exception?
+            if not values:
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity='No similar records!')
             
-            etree.SubElement(node, 'ListOfSimilarRecords', records=stringList)
+            else:
+                valuesList = []
+                i = 0
+                while i < len(values):
+                    print(values[i])
+                    valuesList.append(values[i])
+                    i += 1
+
+                stringList = ', '.join(map(str, valuesList))
+
+                print(stringList)
+                
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity=stringList)
        
+            return node
+
+        else:
+            requestSimilar = self.parent.kvp['similar'][0]
+
+            c.execute('SELECT record1, total_similarity FROM similarities WHERE record2 = '+ requestID +' AND total_similarity >= 51 UNION SELECT record2, total_similarity FROM similarities WHERE record1 = '+ requestID +' AND total_similarity >= 50 ORDER BY total_similarity DESC LIMIT '+ requestSimilar +'')
+        
+            values = c.fetchall()
+
+            print(values)
+
+            # if there are no similar records for the given id 
+            # or Exception?
+            if not values:
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity='No similar records!')
+            
+            else:
+                valuesList = []
+                i = 0
+                while i < len(values):
+                    print(values[i])
+                    valuesList.append(values[i])
+                    i += 1
+
+                stringList = ', '.join(map(str, valuesList))
+
+                print(stringList)
+                
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity=stringList)
+       
+            return node
+    
+    def openmap(self):
+        
+        print('OpenMap wird ausgeführt')
+
+        # wenn es kein outputschema= gibt, ist das schema csw 
+        if 'outputschema' not in self.parent.kvp:
+            self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
+        
+        # wenn ein falsches outputformat angegeben ist 
+        if ('outputformat' in self.parent.kvp and
+            self.parent.kvp['outputformat'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputFormat']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputformat', 'Invalid outputformat parameter %s' %
+            self.parent.kvp['outputformat'])
+
+        # wenn ein falsches outputschema angegeben ist 
+        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputSchema']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputschema', 'Invalid outputschema parameter %s' %
+            self.parent.kvp['outputschema'])
+
+
+        if 'elementsetname' not in self.parent.kvp:
+            self.parent.kvp['elementsetname'] = 'summary'
+        else:
+            if (self.parent.kvp['elementsetname'] not in
+                self.parent.context.model['operations']['GetRecordById']['parameters']
+                ['ElementSetName']['values']):
+                return self.exceptionreport('InvalidParameterValue',
+                'elementsetname', 'Invalid elementsetname parameter %s' %
+                self.parent.kvp['elementsetname'])
+    
+        # erster knoten, kann man übernehmen 
+        node = etree.Element(util.nspath_eval('csw:GetSimilarRecordsResponse',
+        self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
+
+        click.launch('/usr/lib/python3.5/site-packages/pycsw/test.html', locate=True)
+
         return node
 
     def describerecord(self):

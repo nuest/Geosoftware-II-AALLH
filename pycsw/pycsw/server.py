@@ -561,6 +561,8 @@ class Csw(object):
                 self.response = self.iface.getcapabilities()
             elif self.kvp['request'] == 'GetSimilarRecords':
                 self.response = self.iface.getsimilarrecords()
+            elif self.kvp['request'] == 'OpenMap':
+                self.response = self.iface.openmap()
             elif self.kvp['request'] == 'DescribeRecord':
                 self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
@@ -610,6 +612,9 @@ class Csw(object):
 
     def getsimilarrecords(self):
         return self.iface.getsimilarrecords()
+    
+    def getsimilarrecords(self):
+        return self.iface.openmap()
 
     def getcapabilities(self):
         """ Handle GetCapabilities request """
@@ -688,6 +693,14 @@ class Csw(object):
         # new requests for the similarities should be always in json format (@author: Anika Graupner)
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
                 self.kvp['request'] == 'GetSimilarRecords'):
+            self.contenttype = self.kvp['request']
+            from pycsw.core.formats import fmt_json
+            response = fmt_json.xml2json(response,
+                                         self.context.namespaces,
+                                         self.pretty_print)
+        
+        elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
+                self.kvp['request'] == 'OpenMap'):
             self.contenttype = self.kvp['request']
             from pycsw.core.formats import fmt_json
             response = fmt_json.xml2json(response,
