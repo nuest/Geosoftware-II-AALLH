@@ -27,8 +27,14 @@ from datetime import date
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="File name with extension")
+def main(path, name):
+    res = getTimeExtent(name, path)
+    if res[0] != None:
+        click.echo(res[0])
+    else:
+        click.echo(res[1])
 
-def getTimeExtend(name, path):
+def getTimeExtent(name, path):
     """
     returns the bounding Box of supported Datatypes and standards in WGS84.
     
@@ -43,7 +49,7 @@ def getTimeExtend(name, path):
     filepath = "%s\%s" % (path, name)
     # get file extension
     filename, file_extension = os.path.splitext(filepath)
-    print(file_extension)
+    # print(file_extension)
     # netCDF handeling
     if file_extension == ".nc":
         try:
@@ -62,19 +68,16 @@ def getTimeExtend(name, path):
                 
                 avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
                 # avgInt = math.floor(avgInt*1000)/1000
-                print(avgInt)
+                # print(avgInt)
             
-            click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
-            return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
+            return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt],None)
 
             
         # errors
         except KeyError:
-            click.echo("'time' may be spelled wrong: should be 'time")
-            return None
+            return (None, "'time' may be spelled wrong: should be 'time")
         except:
-            click.echo("File not found")
-            return None
+            return (None, "File Error!")
 
     elif file_extension == ".csv" or file_extension == ".txt":
         # column name should be either date, time or timestamp
@@ -98,14 +101,12 @@ def getTimeExtend(name, path):
 
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
             if(time == None):
-                raise ValueError()
+                raise ValueError("pleas rename timestamp to: date/time/timestamp")
         # errors
-        except ValueError:
-            click.echo("pleas rename timestamp to: date/time/timestamp")
-            return None
+        except ValueError as e:
+            return (None, e)
         except:
-            click.echo("file not found")
-            return None
+            return (None, "File Error!")
         
         # if no error accured
         else:
@@ -125,10 +126,9 @@ def getTimeExtend(name, path):
                 
                 avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
                 # avgInt = math.floor(avgInt*1000)/1000
-                print(avgInt)
+                # print(avgInt)
             
-                click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
-                return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
+                return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
 
             # in case the words are separated by a ';' insted of a comma
             except KeyError:
@@ -149,18 +149,15 @@ def getTimeExtend(name, path):
                     
                     avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
                     # avgInt = math.floor(avgInt*1000)/1000
-                    print(avgInt)
+                    # print(avgInt)
                 
-                    click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
-                    return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
+                    return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
                 # the csv is not valid
                 except KeyError:
-                    click.echo("Pleas seperate your data with either ',' or ';'!" )
-                    return None
+                    return (None, "Pleas seperate your data with either ',' or ';'!" )
             # errors
             except:
-                click.echo("File Error: File not found or check if your csv file is valid to 'csv on the web'")
-                return None
+                return (None, "File Error: File not found or check if your csv file is valid to 'csv on the web'")
 
     elif file_extension == ".json" or file_extension == ".geojson":
         ds = open(filepath)
@@ -173,8 +170,7 @@ def getTimeExtend(name, path):
             elif "date" in jsonDict["features"][0]:
                 prop = "date"
             else:
-                click.echo("no time data available")
-                return None
+                return (None, "no time data available")
 
             timeext = []
             for feature in jsonDict["features"]:
@@ -190,10 +186,9 @@ def getTimeExtend(name, path):
                 interval.append(isoTimeSeq[i+1] - isoTimeSeq[i])
             
             avgInt = functools.reduce(lambda x, y: x + y, interval) / float(len(interval))
-            print(avgInt)
+            # print(avgInt)
         
-            click.echo([isoTimeSeq[0], isoTimeSeq[-1], avgInt])
-            return [isoTimeSeq[0], isoTimeSeq[-1], avgInt]
+            return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
         else:
             prop = ""
             if "time" in jsonDict:
@@ -201,13 +196,11 @@ def getTimeExtend(name, path):
             elif "date" in jsonDict:
                 prop = "date"
             else:
-                click.echo("no time data available")
-                return None
+                return (None, "no time data available")
 
             timeext = jsonDict["properties"]["time"]
             timeext = DateTime(timeext)
-            click.echo([timeext, timeext, 0])
-            return [timeext, timeext, 0]
+            return ([timeext, timeext, 0], None)
 
 
     elif file_extension == ".gpkg":
@@ -219,11 +212,10 @@ def getTimeExtend(name, path):
                     """)
             row = c.fetchone()
             row = list(map(DateTime, row))
-            print(row)
-            return [row[0], row[0], 0]
-            click.echo([row[0], row[0], 0])
+            # print(row)
+            return ([str(row[0]), str(row[0]), 0], None)
         except:
-            click.echo("File Not Found")
+            return (None, "File Error!")
         finally:
             try:
                 conn.close()
@@ -231,12 +223,13 @@ def getTimeExtend(name, path):
                 pass
 
     elif file_extension == ".tif" or file_extension == ".tiff":
-        ds =  gdal.Open(filepath)
-        print(gdal.Info(ds))
+        # ds =  gdal.Open(filepath)
+        # print(gdal.Info(ds))
+        return (None, "Filetype %s not yet supported" % file_extension)
     
     else:
-        click.echo("Filetype %s not yet supported" % file_extension)
+        return (None, "Filetype %s not yet supported" % file_extension)
 
 # Main method
 if __name__ == '__main__':
-    getTimeExtend()
+    main()
