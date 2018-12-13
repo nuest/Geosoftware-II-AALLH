@@ -49,8 +49,6 @@ from pycsw.plugins.profiles import profile as pprofile
 import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
 from pycsw.ogc.csw import csw2, csw3
-from pycsw.ahl import api_functions
-from pycsw.modules import click
 
 LOGGER = logging.getLogger(__name__)
 
@@ -565,6 +563,8 @@ class Csw(object):
                 self.response = self.iface.getsimilarrecords()
             elif self.kvp['request'] == 'OpenMap':
                 self.response = self.iface.openmap()
+            elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
+                self.response = self.iface.getsimilaritybbox()
             elif self.kvp['request'] == 'DescribeRecord':
                 self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
@@ -612,10 +612,13 @@ class Csw(object):
 
         return self._write_response()
 
+    def getsimilaritybbox(self): #TAN
+        return self.iface.getsimilaritybbox()
+
     def getsimilarrecords(self):
         return self.iface.getsimilarrecords()
     
-    def getsimilarrecords(self):
+    def openmap(self):
         return self.iface.openmap()
 
     def getcapabilities(self):
@@ -694,7 +697,7 @@ class Csw(object):
         
         # new requests for the similarities should be always in json format (@author: Anika Graupner)
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
-                self.kvp['request'] == 'GetSimilarRecords' or 'OpenMap'):
+                self.kvp['request'] == 'GetSimilarRecords' or self.kvp['request'] == 'GetSimilarityBBox'):
             
             if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
                 self.kvp['outputformat'] == 'application/xml'):

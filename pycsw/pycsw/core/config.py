@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap', 'GetSimilarityBBox'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -269,6 +269,14 @@ class StaticContext(object):
                         'parameters': {
                         }
                     },
+                    'GetSimilarityBBox': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
+                    },
                     'OpenMap': {
                         'methods': {
                             'get': True,
@@ -277,7 +285,6 @@ class StaticContext(object):
                         'parameters': {
                         }
                     }
-                 }
                 },
                 'parameters': {
                     'version': {
@@ -352,7 +359,7 @@ class StaticContext(object):
             'csw30': {
                 'operations_order': [
                     'GetCapabilities', 'GetDomain', 'GetRecords',
-                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap'
+                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap', 'GetSimilarityBBox'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -424,6 +431,14 @@ class StaticContext(object):
                         }
                     },
                     'GetSimilarRecords': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
+                    },
+                    'GetSimilarityBBox': {
                         'methods': {
                             'get': True,
                             'post': False,
