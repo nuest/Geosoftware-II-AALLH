@@ -46,6 +46,8 @@ from pycsw.core.formats.fmt_json import xml2dict
 from pycsw.ogc.fes import fes1
 import logging
 import urllib
+import sqlite3
+import codecs
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +59,115 @@ class Csw2(object):
 
         self.parent = server_csw
         self.version = '2.0.2'
+
+    def getsimilaritybbox(self, raw=False):
+
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # author: Aysel Tandik
+        # connection to database 
+        print('getsimilaritybbox is done')
+        conn = sqlite3.connect('../../db-data/data.db')
+        c = conn.cursor()
+        #c.execute('Select wkt_geometry FROM records')
+        print(c.fetchone())
+
+        ''' Handle GetRecordById request '''
+        # wenn kein Parameter für die ID angegeben wird, es also kein id= gibt 
+        if 'idone' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'idone',
+            'Missing id parameter')
+        
+        # wenn kein Parameter für die ID angegeben wird, es also kein id= gibt 
+        if 'idtwo' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'idtwo',
+            'Missing id parameter')
+
+
+        # wenn es id= gibt, aber keinen Wert dahinter 
+        if len(self.parent.kvp['idone']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'idone',
+            'Invalid id parameter')
+        
+        # wenn es id= gibt, aber keinen Wert dahinter 
+        if len(self.parent.kvp['idtwo']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'idtwo',
+            'Invalid id parameter')
+
+        if self.parent.requesttype == 'GET':
+           self.parent.kvp['idone'] = self.parent.kvp['idone'].split(',')
+        
+        if self.parent.requesttype == 'GET':
+           self.parent.kvp['idtwo'] = self.parent.kvp['idtwo'].split(',')
+
+
+        # wenn es kein outputschema= gibt, ist das schema csw 
+        if 'outputschema' not in self.parent.kvp:
+            self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
+
+        # wenn ein falsches outputformat angegeben ist 
+        if ('outputformat' in self.parent.kvp and
+            self.parent.kvp['outputformat'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputFormat']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputformat', 'Invalid outputformat parameter %s' %
+            self.parent.kvp['outputformat'])
+
+        # wenn ein falsches outputschema angegeben ist 
+        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
+            self.parent.context.model['operations']['GetRecordById']['parameters']
+            ['outputSchema']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputschema', 'Invalid outputschema parameter %s' %
+            self.parent.kvp['outputschema'])
+
+
+        if 'elementsetname' not in self.parent.kvp:
+            self.parent.kvp['elementsetname'] = 'summary'
+        else:
+            if (self.parent.kvp['elementsetname'] not in
+                self.parent.context.model['operations']['GetRecordById']['parameters']
+                ['ElementSetName']['values']):
+                return self.exceptionreport('InvalidParameterValue',
+                'elementsetname', 'Invalid elementsetname parameter %s' %
+                self.parent.kvp['elementsetname'])
+    
+        # erster knoten, kann man übernehmen 
+        node = etree.Element(util.nspath_eval('csw:GetSimilarityBBox',
+        self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
+
+        id1 = self.parent.kvp['idone'][0]
+        id2 = self.parent.kvp['idtwo'][0]
+        print(id1)
+        print(id2)
+
+        if 'BB' not in self.parent.kvp:
+            c.execute('SELECT bbox FROM similarities WHERE record1 = '+ id1 +' and record2 = '+ id2 +'')
+        
+            values = c.fetchall()
+
+            print(values)
+            
+            valuesList = []
+            i = 0
+            while i < len(values):
+                print(values[i])
+                valuesList.append(values[i])
+                i += 1
+
+            stringList = ''.join(map(str, valuesList))
+            stringList.strip(',')
+
+            print(stringList)
+            etree.SubElement(node, 'SimilarityOfBoundingBox', Value=stringList)
+       
+            return node
+
+    # Öffnen der Html page TAN
+    def extractmetadata(self):
+        print(os.getcwd())
+        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
+        return f.read()
 
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''
@@ -1171,8 +1282,6 @@ class Csw2(object):
             return node
 
     def getrecordbyid(self, raw=False):
-        ''' Handle GetRecordById request '''
-
         # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
         # connection to database 
         # @author: Aysel Tandik, Anika Graupner
@@ -1192,9 +1301,6 @@ class Csw2(object):
             'Invalid id parameter')
         if 'outputschema' not in self.parent.kvp:
             self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
-
-        if self.parent.requesttype == 'GET':
-            self.parent.kvp['id'] = self.parent.kvp['id'].split(',')
 
         if ('outputformat' in self.parent.kvp and
             self.parent.kvp['outputformat'] not in
