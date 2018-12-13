@@ -49,11 +49,13 @@ from pycsw.plugins.profiles import profile as pprofile
 import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
 from pycsw.ogc.csw import csw2, csw3
+from pycsw.ahl import api_functions
+from pycsw.modules import click
 
 LOGGER = logging.getLogger(__name__)
 
-
 class Csw(object):
+
     """ Base CSW server """
     def __init__(self, rtconfig=None, env=None, version='3.0.0'):
         """ Initialize CSW """
@@ -99,6 +101,18 @@ class Csw(object):
             self.iface = csw2.Csw2(server_csw=self)
             self.context.set_model('csw')
 
+        # define CSW implementation object (default CSW3)
+        #self.request_version = version
+
+        #if 'version' not in self.kvp:
+            #self.iface = api_functions.Api(server_api=self)
+        #elif self.request_version == '2.0.2':
+            #self.iface = csw2.Csw2(server_csw=self)
+            #self.context.set_model('csw')
+        #elif self.request_version == '3.0.0':
+            #self.iface = csw3.Csw3(server_csw=self)
+            #self.context.set_model('csw')
+        
         # load user configuration
         try:
             LOGGER.info('Loading user configuration')
@@ -179,7 +193,7 @@ class Csw(object):
         LOGGER.debug('Model: %s.', self.context.model)
 
         # load user-defined mappings if they exist
-        if self.config.has_option('repository', 'mappings'):
+        if self.config.has_option('repository', 'mappings'): # hier könnten wir eigene Mapppings einbinden 
             # override default repository mappings
             try:
                 import imp
@@ -486,7 +500,7 @@ class Csw(object):
                     error = 1
                     locator = 'service'
                     code = 'InvalidParameterValue'
-                    text = 'You are stupid! Invalid value for service: %s.\
+                    text = 'Invalid value for service: %s.\
                     Value MUST be CSW' % self.kvp['service']
 
                 # test version
@@ -547,6 +561,10 @@ class Csw(object):
 
             if self.kvp['request'] == 'GetCapabilities':
                 self.response = self.iface.getcapabilities()
+            elif self.kvp['request'] == 'GetSimilarRecords':
+                self.response = self.iface.getsimilarrecords()
+            elif self.kvp['request'] == 'OpenMap':
+                self.response = self.iface.openmap()
             elif self.kvp['request'] == 'DescribeRecord':
                 self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
@@ -594,6 +612,12 @@ class Csw(object):
 
         return self._write_response()
 
+    def getsimilarrecords(self):
+        return self.iface.getsimilarrecords()
+    
+    def getsimilarrecords(self):
+        return self.iface.openmap()
+
     def getcapabilities(self):
         """ Handle GetCapabilities request """
         return self.iface.getcapabilities()
@@ -635,6 +659,19 @@ class Csw(object):
 
         LOGGER.info('Writing response.')
 
+        #import webbrowser
+
+        # neuer code für unsere API html anzeigen zu können TAN
+        #if self.response == 'a':
+            #print('ja')
+            
+            #new = 2 # open in a new tab, if possible
+
+            #url = "'/usr/lib/python3.5/site-packages/pycsw/test.html'"
+            #webbrowser.open(url,new=new)
+            #open('/usr/lib/python3.5/site-packages/pycsw/test.html')
+            #print('nein')
+
         if hasattr(self, 'soap') and self.soap:
             self._gen_soap_wrapper()
 
@@ -646,6 +683,7 @@ class Csw(object):
                                   pretty_print=self.pretty_print,
                                   encoding='unicode')
 
+        # Funktion wird aufgerufen um xml in json umzuwandeln, wenn es in der url angegeben ist 
         if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
                 self.kvp['outputformat'] == 'application/json'):
             self.contenttype = self.kvp['outputformat']
@@ -653,6 +691,29 @@ class Csw(object):
             response = fmt_json.xml2json(response,
                                          self.context.namespaces,
                                          self.pretty_print)
+        
+        # new requests for the similarities should be always in json format (@author: Anika Graupner)
+        elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
+                self.kvp['request'] == 'GetSimilarRecords' or 'OpenMap'):
+            
+            if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
+                self.kvp['outputformat'] == 'application/xml'):
+                    if 'outputformat' in self.kvp:
+                        self.contenttype = self.kvp['outputformat']
+                    else:
+                        self.contenttype = self.mimetype
+
+                    xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
+                               '\n' % self.encoding)
+                    appinfo = '<!-- pycsw %s -->\n' % self.context.version 
+
+            else:
+                self.contenttype = self.kvp['request']
+                from pycsw.core.formats import fmt_json
+                response = fmt_json.xml2json(response,
+                                            self.context.namespaces,
+                                            self.pretty_print)                                       
+
         else:  # it's XML
             if 'outputformat' in self.kvp:
                 self.contenttype = self.kvp['outputformat']
@@ -738,6 +799,7 @@ class Csw(object):
                 'methods': {'get': False, 'post': True},
                 'parameters': {}
             }
+            
 
             schema_values = [
                 'http://www.opengis.net/cat/csw/2.0.2',

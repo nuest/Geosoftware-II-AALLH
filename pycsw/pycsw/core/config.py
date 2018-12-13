@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -260,11 +260,27 @@ class StaticContext(object):
                         },
                         'parameters': {
                         }
+                    },
+                    'GetSimilarRecords': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
+                    },
+                    'OpenMap': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
                     }
                 },
                 'parameters': {
                     'version': {
-                        'values': ['2.0.2', '3.0.0']
+                        'values': ['2.0.2', '3.0.0', '']
                     },
                     'service': {
                         'values': ['CSW']
@@ -335,7 +351,7 @@ class StaticContext(object):
             'csw30': {
                 'operations_order': [
                     'GetCapabilities', 'GetDomain', 'GetRecords',
-                    'GetRecordById', 'GetRepositoryItem'
+                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -345,7 +361,7 @@ class StaticContext(object):
                         },
                         'parameters': {
                             'acceptVersions': {
-                                'values': ['2.0.2', '3.0.0']
+                                'values': ['2.0.2', '3.0.0', '']
                             },
                             'acceptFormats': {
                                 'values': ['text/xml', 'application/xml']
@@ -405,11 +421,27 @@ class StaticContext(object):
                         },
                         'parameters': {
                         }
+                    },
+                    'GetSimilarRecords': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
+                    },
+                    'OpenMap': {
+                        'methods': {
+                            'get': True,
+                            'post': False,
+                        },
+                        'parameters': {
+                        }
                     }
                 },
                 'parameters': {
                     'version': {
-                        'values': ['2.0.2', '3.0.0']
+                        'values': ['2.0.2', '3.0.0', '']
                     },
                     'service': {
                         'values': ['CSW']
