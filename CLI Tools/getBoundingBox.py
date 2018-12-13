@@ -28,8 +28,11 @@ import numpy as np
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="File name with extension")
-def main(path, name):
+@click.option('--clear', default=False, help='Argument wether you want to display only the Output \nOptions: 1, yes, y and true')
+def main(path, name, clear):
     res = getBoundingBox(name, path)
+    if clear:
+        click.clear()
     if res[0] != None:
         click.echo(res[0])
     else:
@@ -51,7 +54,7 @@ def getBoundingBox(name, path):
     filepath = "%s\%s" % (path, name)
     # get file extension
     filename, file_extension = os.path.splitext(filepath)
-    # print(file_extension)
+    print(file_extension)
     #shapefile handelig
     if file_extension == ".shp":
         try:

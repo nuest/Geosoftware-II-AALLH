@@ -27,8 +27,11 @@ from datetime import date
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="File name with extension")
-def main(path, name):
+@click.option('--clear', default=False, help='Argument wether you want to display only the Output \nOptions: 1, yes, y and true')
+def main(path, name, clear):
     res = getTimeExtent(name, path)
+    if clear:
+        click.clear()
     if res[0] != None:
         click.echo(res[0])
     else:
