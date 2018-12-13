@@ -10,10 +10,12 @@ from osgeo import gdal, ogr, osr
 from subprocess import Popen, PIPE
 
 def spatialOverlap(bboxA, bboxB):
+    """
+    returns a 
+    """
+    # get Boundingboxes as Geometries
     boxA = _generateGeometryFromBbox(bboxA)
     boxB = _generateGeometryFromBbox(bboxB)
-
-    # print(boxA)
 
     areaA = boxA.GetArea()
     areaB = boxB.GetArea()
@@ -62,7 +64,7 @@ def similarArea(bboxA, bboxB):
             reachedPercentArea = areaB*100/areaA
         else:
             reachedPercentArea = areaA*100/areaB
-    except ZeroDivisionError:
+    except ZeroDivisionError: # if both are points
         reachedPercentArea = 100
     finally:
         reachedPercentArea = floor(reachedPercentArea*100)/100
@@ -268,4 +270,27 @@ print(spatialDistance(bbox1, bbox2))
 print(spatialOverlap(bbox1, bbox2))
 print(similarArea(bbox1, bbox2))
 
+# Same BoundingBox
+print("\n Same BoundingBox \n")
+bbox1 = [0.439453,29.688053,3.911133,31.765537]
+bbox2 = [0.439453,29.688053,3.911133,31.765537]
+print(spatialDistance(bbox1, bbox2))
+print(spatialOverlap(bbox1, bbox2))
+print(similarArea(bbox1, bbox2))
+
+# Ähnliche BoundingBox, die nah beieinander liegt
+print("\n Similar Bounding Box which are close to each other \n")
+bbox1 = [7.596703,51.950402,7.656441,51.978536]
+bbox2 = [7.588205,51.952412,7.616014,51.967644]
+print(spatialDistance(bbox1, bbox2))
+print(spatialOverlap(bbox1, bbox2))
+print(similarArea(bbox1, bbox2))
+
+# Weit entfernte Boundingboxen 
+print("\n Not so related Bounding Box \n")
+bbox1 = [7.596703,51.950402,7.656441,51.978536]
+bbox2 = [-96.800194,32.760085,-96.796353,32.761385]
+print(spatialDistance(bbox1, bbox2))
+print(spatialOverlap(bbox1, bbox2))
+print(similarArea(bbox1, bbox2))
 
