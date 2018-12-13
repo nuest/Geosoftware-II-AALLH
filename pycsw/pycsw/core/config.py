@@ -277,6 +277,7 @@ class StaticContext(object):
                         'parameters': {
                         }
                     }
+                 }
                 },
                 'parameters': {
                     'version': {
