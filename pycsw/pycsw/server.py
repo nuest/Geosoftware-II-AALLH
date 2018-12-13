@@ -49,6 +49,7 @@ from pycsw.plugins.profiles import profile as pprofile
 import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
 from pycsw.ogc.csw import csw2, csw3
+from os.path import abspath, exists
 
 LOGGER = logging.getLogger(__name__)
 
@@ -662,18 +663,12 @@ class Csw(object):
 
         LOGGER.info('Writing response.')
 
-        #import webbrowser
-
-        # neuer code für unsere API html anzeigen zu können TAN
-        #if self.response == 'a':
-            #print('ja')
-            
-            #new = 2 # open in a new tab, if possible
-
-            #url = "'/usr/lib/python3.5/site-packages/pycsw/test.html'"
-            #webbrowser.open(url,new=new)
-            #open('/usr/lib/python3.5/site-packages/pycsw/test.html')
-            #print('nein')
+         # neuer code für unsere API html anzeigen zu können TANDIK
+        if isinstance(self.response, str):
+            f_path = abspath('/usr/lib/python3.5/site-packages/pycsw/page.html')
+            if exists(f_path):
+                with open(f_path) as f:
+                    return f.read()
 
         if hasattr(self, 'soap') and self.soap:
             self._gen_soap_wrapper()

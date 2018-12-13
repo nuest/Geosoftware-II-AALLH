@@ -164,10 +164,10 @@ class Csw2(object):
             return node
 
     # Öffnen der Html page TAN
-    def extractmetadata(self):
-        print(os.getcwd())
+    def openmap(self):
+        print('Aysel')
         f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
-        return f.read()
+        print(f.read())
 
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''
@@ -659,57 +659,57 @@ class Csw2(object):
        
             return node
     
-    def openmap(self):
+    # def openmap(self):
         
-        print('OpenMap wird ausgeführt')
+    #     print('OpenMap wird ausgeführt')
 
-        # wenn es kein outputschema= gibt, ist das schema csw 
-        if 'outputschema' not in self.parent.kvp:
-            self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
+    #     # wenn es kein outputschema= gibt, ist das schema csw 
+    #     if 'outputschema' not in self.parent.kvp:
+    #         self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
         
-        # wenn ein falsches outputformat angegeben ist 
-        if ('outputformat' in self.parent.kvp and
-            self.parent.kvp['outputformat'] not in
-            self.parent.context.model['operations']['GetRecordById']['parameters']
-            ['outputFormat']['values']):
-            return self.exceptionreport('InvalidParameterValue',
-            'outputformat', 'Invalid outputformat parameter %s' %
-            self.parent.kvp['outputformat'])
+    #     # wenn ein falsches outputformat angegeben ist 
+    #     if ('outputformat' in self.parent.kvp and
+    #         self.parent.kvp['outputformat'] not in
+    #         self.parent.context.model['operations']['GetRecordById']['parameters']
+    #         ['outputFormat']['values']):
+    #         return self.exceptionreport('InvalidParameterValue',
+    #         'outputformat', 'Invalid outputformat parameter %s' %
+    #         self.parent.kvp['outputformat'])
 
-        # wenn ein falsches outputschema angegeben ist 
-        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
-            self.parent.context.model['operations']['GetRecordById']['parameters']
-            ['outputSchema']['values']):
-            return self.exceptionreport('InvalidParameterValue',
-            'outputschema', 'Invalid outputschema parameter %s' %
-            self.parent.kvp['outputschema'])
+    #     # wenn ein falsches outputschema angegeben ist 
+    #     if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
+    #         self.parent.context.model['operations']['GetRecordById']['parameters']
+    #         ['outputSchema']['values']):
+    #         return self.exceptionreport('InvalidParameterValue',
+    #         'outputschema', 'Invalid outputschema parameter %s' %
+    #         self.parent.kvp['outputschema'])
 
 
-        if 'elementsetname' not in self.parent.kvp:
-            self.parent.kvp['elementsetname'] = 'summary'
-        else:
-            if (self.parent.kvp['elementsetname'] not in
-                self.parent.context.model['operations']['GetRecordById']['parameters']
-                ['ElementSetName']['values']):
-                return self.exceptionreport('InvalidParameterValue',
-                'elementsetname', 'Invalid elementsetname parameter %s' %
-                self.parent.kvp['elementsetname'])
+    #     if 'elementsetname' not in self.parent.kvp:
+    #         self.parent.kvp['elementsetname'] = 'summary'
+    #     else:
+    #         if (self.parent.kvp['elementsetname'] not in
+    #             self.parent.context.model['operations']['GetRecordById']['parameters']
+    #             ['ElementSetName']['values']):
+    #             return self.exceptionreport('InvalidParameterValue',
+    #             'elementsetname', 'Invalid elementsetname parameter %s' %
+    #             self.parent.kvp['elementsetname'])
     
-        # erster knoten, kann man übernehmen 
-        node = etree.Element(util.nspath_eval('csw:GetSimilarRecordsResponse',
-        self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
+    #     # erster knoten, kann man übernehmen 
+    #     node = etree.Element(util.nspath_eval('csw:GetSimilarRecordsResponse',
+    #     self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
         
-        #click.launch('/usr/lib/python3.5/site-packages/pycsw/test.html', locate=True)
+    #     #click.launch('/usr/lib/python3.5/site-packages/pycsw/test.html', locate=True)
 
-        from os.path import abspath
+    #     from os.path import abspath
 
-        import webbrowser
-        new = 2 # open in a new tab, if possible
+    #     import webbrowser
+    #     new = 2 # open in a new tab, if possible
 
-        url = "/usr/lib/python3.5/site-packages/pycsw/test.html"
-        webbrowser.open(url,new=new)
+    #     url = "/usr/lib/python3.5/site-packages/pycsw/test.html"
+    #     webbrowser.open(url,new=new)
 
-        return node
+    #     return node
 
     def describerecord(self):
         ''' Handle DescribeRecord request '''

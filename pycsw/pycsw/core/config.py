@@ -280,7 +280,7 @@ class StaticContext(object):
                     'OpenMap': {
                         'methods': {
                             'get': True,
-                            'post': False,
+                            'post': True,
                         },
                         'parameters': {
                         }
@@ -449,7 +449,7 @@ class StaticContext(object):
                     'OpenMap': {
                         'methods': {
                             'get': True,
-                            'post': False,
+                            'post': True,
                         },
                         'parameters': {
                         }
