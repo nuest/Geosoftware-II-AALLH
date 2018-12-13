@@ -45,8 +45,7 @@ from pycsw.core import config, log, metadata, util
 from pycsw.core.formats.fmt_json import xml2dict
 from pycsw.ogc.fes import fes1
 import logging
-
-from pycsw.modules import click
+import urllib
 
 LOGGER = logging.getLogger(__name__)
 
@@ -489,11 +488,6 @@ class Csw2(object):
         node = etree.Element(util.nspath_eval('csw:GetSimilarRecordsResponse',
         self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
 
-        # zweiter knoten, kann man übernehmen 
-        node.attrib[util.nspath_eval('xsi:schemaLocation',
-        self.parent.context.namespaces)] = '%s %s/csw/2.0.2/CSW-discovery.xsd' % \
-        (self.parent.context.namespaces['csw'], self.parent.config.get('server', 'ogc_schemas_base'))
-
         requestID = self.parent.kvp['id'][0]
 
         if 'similar' not in self.parent.kvp:
@@ -506,7 +500,7 @@ class Csw2(object):
             # if there are no similar records for the given id 
             # or Exception?
             if not values:
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity='No similar records!')
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities='No similar records!')
             
             else:
                 valuesList = []
@@ -520,7 +514,7 @@ class Csw2(object):
 
                 print(stringList)
                 
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity=stringList)
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities=stringList)
        
             return node
 
@@ -536,7 +530,7 @@ class Csw2(object):
             # if there are no similar records for the given id 
             # or Exception?
             if not values:
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity='No similar records!')
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities='No similar records!')
             
             else:
                 valuesList = []
@@ -550,7 +544,7 @@ class Csw2(object):
 
                 print(stringList)
                 
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordSimilarity=stringList)
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities=stringList)
        
             return node
     
@@ -593,8 +587,16 @@ class Csw2(object):
         # erster knoten, kann man übernehmen 
         node = etree.Element(util.nspath_eval('csw:GetSimilarRecordsResponse',
         self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
+        
+        #click.launch('/usr/lib/python3.5/site-packages/pycsw/test.html', locate=True)
 
-        click.launch('/usr/lib/python3.5/site-packages/pycsw/test.html', locate=True)
+        from os.path import abspath
+
+        import webbrowser
+        new = 2 # open in a new tab, if possible
+
+        url = "/usr/lib/python3.5/site-packages/pycsw/test.html"
+        webbrowser.open(url,new=new)
 
         return node
 
