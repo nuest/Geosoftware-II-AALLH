@@ -49,8 +49,6 @@ from pycsw.plugins.profiles import profile as pprofile
 import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
 from pycsw.ogc.csw import csw2, csw3
-from pycsw.ahl import api_functions
-from pycsw.modules import click
 
 LOGGER = logging.getLogger(__name__)
 
@@ -93,8 +91,8 @@ class Csw(object):
         self.language = {'639_code': 'en', 'text': 'english'}
         self.process_time_start = time()
 
-        # define CSW implementation object (default CSW3)
-        self.iface = csw3.Csw3(server_csw=self)
+        # define CSW implementation object (default CSW2)
+        self.iface = csw2.Csw2(server_csw=self)
         self.request_version = version
 
         if self.request_version == '2.0.2':
@@ -283,7 +281,7 @@ class Csw(object):
             self.oaipmhobj = oaipmh.OAIPMH(self.context, self.config)
         return self.oaipmhobj
 
-    def dispatch(self, writer=sys.stdout, write_headers=True):
+    def dispatch(self, writer=sys.stdout, write_headers=True):#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         """ Handle incoming HTTP request """
 
         error = 0
@@ -504,18 +502,18 @@ class Csw(object):
                     Value MUST be CSW' % self.kvp['service']
 
                 # test version
-                kvp_version = self.kvp.get('version', '')
-                try:
-                    kvp_version_integer = util.get_version_integer(kvp_version)
-                except Exception as err:
-                    kvp_version_integer = 'invalid_value'
-                if (request != 'GetCapabilities' and
-                        kvp_version_integer != own_version_integer):
-                    error = 1
-                    locator = 'version'
-                    code = 'InvalidParameterValue'
-                    text = ('Invalid value for version: %s. Value MUST be '
-                            '2.0.2 or 3.0.0' % kvp_version)
+                #kvp_version = self.kvp.get('version', '')
+                #try:
+                    #kvp_version_integer = util.get_version_integer(kvp_version)
+                #except Exception as err:
+                    #kvp_version_integer = 'invalid_value'
+                #if (request != 'GetCapabilities' and
+                        #kvp_version_integer != own_version_integer):
+                    #error = 1
+                    #locator = 'version'
+                    #code = 'InvalidParameterValue'
+                    #text = ('Invalid value for version: %s. Value MUST be '
+                            #'2.0.2 or 3.0.0' % kvp_version)
 
                 # check for GetCapabilities acceptversions
                 if 'acceptversions' in self.kvp:
@@ -565,6 +563,8 @@ class Csw(object):
                 self.response = self.iface.getsimilarrecords()
             elif self.kvp['request'] == 'OpenMap':
                 self.response = self.iface.openmap()
+            elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
+                self.response = self.iface.getsimilaritybbox()
             elif self.kvp['request'] == 'DescribeRecord':
                 self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
@@ -593,7 +593,7 @@ class Csw(object):
                     'Invalid request parameter: %s' % self.kvp['request']
                 )
 
-        LOGGER.info('Request processed')
+        LOGGER.info('Request processed')#bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
         if self.mode == 'sru':
             LOGGER.info('SRU mode detected; processing response.')
             self.response = self.sru().response_csw2sru(self.response,
@@ -612,10 +612,13 @@ class Csw(object):
 
         return self._write_response()
 
+    def getsimilaritybbox(self): #TAN
+        return self.iface.getsimilaritybbox()
+
     def getsimilarrecords(self):
         return self.iface.getsimilarrecords()
     
-    def getsimilarrecords(self):
+    def openmap(self):
         return self.iface.openmap()
 
     def getcapabilities(self):
@@ -694,7 +697,7 @@ class Csw(object):
         
         # new requests for the similarities should be always in json format (@author: Anika Graupner)
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
-                self.kvp['request'] == 'GetSimilarRecords' or 'OpenMap'):
+                self.kvp['request'] == 'GetSimilarRecords' or self.kvp['request'] == 'GetSimilarityBBox'):
             
             if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
                 self.kvp['outputformat'] == 'application/xml'):
