@@ -21,7 +21,6 @@ import pygeoj
 import shapefile
 import xarray as xr
 import ogr2ogr
-import numpy as np
 
 
 # asking for parameters in command line
@@ -33,7 +32,7 @@ def main(path, name, clear):
     res = getBoundingBox(name, path)
     if clear:
         click.clear()
-    if res[0] != None:
+    if res[0] is not None:
         click.echo(res[0])
     else:
         click.echo(res[1])
@@ -54,7 +53,7 @@ def getBoundingBox(name, path):
     filepath = "%s\%s" % (path, name)
     # get file extension
     filename, file_extension = os.path.splitext(filepath)
-    print(file_extension)
+    # print(file_extension)
     #shapefile handelig
     if file_extension == ".shp":
         try:
@@ -68,7 +67,7 @@ def getBoundingBox(name, path):
 
 
     # geojson handeling
-    elif file_extension == ".json" or file_extension == ".geojson":
+    elif file_extension in (".json" , ".geojson"):
         try:
             myGeojson = pygeoj.load(filepath=filepath)
             return (myGeojson.bbox, None)
@@ -89,7 +88,7 @@ def getBoundingBox(name, path):
         except:
             return (None, "File Error!")
 
-    elif file_extension == ".tif" or file_extension == ".tiff":
+    elif file_extension in (".tif", ".tiff"):
         # @see https://stackoverflow.com/questions/2922532/obtain-latitude-and-longitude-from-a-geotiff-file
         try:
             # get the existing coordinate system
@@ -167,7 +166,7 @@ def getBoundingBox(name, path):
             row = c.fetchall()
             bboxes = []
 
-            if row == None:
+            if row is None:
                 assert LookupError("No valid data detected (EPSG:4327 not supported)")
 
             for line in row:
@@ -202,7 +201,7 @@ def getBoundingBox(name, path):
 
 
     # csv or csv formated textfile handeling (csv on the web)
-    elif file_extension == ".csv" or file_extension == ".txt":
+    elif file_extension in (".csv", ".txt"):
         # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         try: # finding the correct collums for latitude and longitude
             csvfile = open(filepath)
@@ -226,7 +225,7 @@ def getBoundingBox(name, path):
                     lat = "lat"
 
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
-            if(lat == None or lng == None):
+            if(lat is None or lng is None):
                 raise ValueError("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
         # errors
         except ValueError as e:
@@ -266,17 +265,17 @@ def getBoundingBox(name, path):
                 return (None, "File Error: File not found or check if your csv file is valid to 'csv on the web'")
 
     # gml handeling
-    elif file_extension == ".gml" or file_extension == ".xml" or file_extension == ".kml":
+    elif file_extension in (".gml", ".xml", ".kml"):
         try:
             # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
             # convert the gml file to a GeoJSON file
-            ogr2ogr.main(["","-f", "GeoJSON", "%s.json" % (name), filepath])
+            ogr2ogr.main(["", "-f", "GeoJSON", "%s.json" % (name), filepath])
             # srcDS = gdal.OpenEx(filepath)
             # ds = gdal.VectorTranslate('output.json', srcDS, format='GeoJSON')
 
             # get boundingbox from generated GeoJSON file
             myGeojson = pygeoj.load(filepath="%s.json"%name)
-            click.echo(myGeojson.bbox)
+            # click.echo(myGeojson.bbox)
             # delete generated GeoJSON file
             return (myGeojson.bbox, None)
         # errors

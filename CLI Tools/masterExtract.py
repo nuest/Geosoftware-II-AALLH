@@ -5,33 +5,38 @@ import extractGeoDataFromFolder as fext
 
 # asking for parameters in command line
 @click.command()
-@click.option('--path', prompt="File path", help='Path to file')
-@click.option('-clear', default=False, help='Argument wether you want to display only the Output \nOptions: 1, yes, y and true')
-@click.option('-t', 'switch', default=False, flag_value='t', help="execute time extraction for one file")
-@click.option('-s', 'switch', default=False, flag_value='s', help="execute boundingbox extraction for one file")
-def main(path, clear, switch):
-    if switch == 't':
+@click.option('--path', prompt="Pleas enter path to Folder", help='Path to Folder containing Geofiles')
+@click.option('--clear','-c', default=False, is_flag=True, help='Clear screen before showing results')
+@click.option('--time', '-t', default=False, is_flag=True, help="execute time extraction for one file")
+@click.option('--space', '-s', default=False, is_flag=True, help="execute boundingbox extraction for one file")
+def main(path, clear, time, space):
+    output = []
+    if time:
         name = click.prompt("Pleas enter filename")
         res = timeext.getTimeExtent(name, path)
-        if clear:
-            click.clear()
-        if res[0] != None:
-            click.echo(res[0])
+        output.append("Timeextent:")
+        if res[0] is not None:
+            output.append(res[0])
         else:
-            click.echo(res[1])
+            output.append(res[1])
     
-    if switch == 's':
-        name = click.prompt("Pleas enter filename")
+    if space:
+        if not time:
+            name = click.prompt("Pleas enter filename")
         res = box.getBoundingBox(name, path)
+        output.append("Spatialextent:")
+        if res[0] is not None:
+            output.append(res[0])
+        else:
+            output.append(res[1])
+
+    if not (time or space):
+        fext.extractFromFolder(path, clear)
+    else:
         if clear:
             click.clear()
-        if res[0] != None:
-            click.echo(res[0])
-        else:
-            click.echo(res[1])
-
-    if not switch:
-        fext.extractFromFolder(path, clear)
+        for x in output:
+            click.echo(x)
 
 if __name__ == "__main__":
     main()
