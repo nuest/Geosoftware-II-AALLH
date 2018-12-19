@@ -8,7 +8,7 @@ is installed as part of the pycsw install process and should be available in you
 PATH.
 
 .. note::
-  Run ``pycsw-admin.py -h`` to see all administration operations and parameters
+  Run ``pycsw-admin.py -h`` to see all administration  and parameters
 
 Metadata Repository Setup
 -------------------------
