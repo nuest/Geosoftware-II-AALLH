@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import sqlite3
+import tempfile
 
 # add local modules folder
 file_path = '../Python_Modules'
@@ -269,23 +270,16 @@ def getBoundingBox(name, path):
         try:
             # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
             # convert the gml file to a GeoJSON file
-            ogr2ogr.main(["", "-f", "GeoJSON", "%s.json" % (name), filepath])
-            # srcDS = gdal.OpenEx(filepath)
-            # ds = gdal.VectorTranslate('output.json', srcDS, format='GeoJSON')
-
-            # get boundingbox from generated GeoJSON file
-            myGeojson = pygeoj.load(filepath="%s.json"%name)
-            # click.echo(myGeojson.bbox)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                print(tmpdirname)
+                ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
+                # get boundingbox from generated GeoJSON file
+                myGeojson = pygeoj.load(filepath="output.json")
             # delete generated GeoJSON file
             return (myGeojson.bbox, None)
         # errors
         except:
             return (None, "file not found or your gml/xml/kml data is not valid")
-        finally:
-            try:
-                os.remove("%s.json"%name)
-            except:
-                pass
                 
     # if the extension has not been implemented yet or won't be supported
     else:
