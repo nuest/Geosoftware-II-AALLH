@@ -108,6 +108,7 @@ class Repository(object):
 
         schema_name, table_name = table.rpartition(".")[::2]
 
+
         self.dataset = type(
             'dataset',
             (base,),
@@ -117,6 +118,7 @@ class Repository(object):
                     "autoload": True,
                     "schema": schema_name or None,
                 },
+
             }
         )
 
@@ -202,7 +204,6 @@ class Repository(object):
 
     def query_ids(self, ids):
         ''' Query by list of identifiers '''
-
         column = getattr(self.dataset, \
         self.context.md_core_model['mappings']['pycsw:Identifier'])
 
