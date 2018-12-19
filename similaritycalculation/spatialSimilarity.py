@@ -3,8 +3,8 @@ import sys
 from math import *
 
 # add local modules folder
-file_path = '../Python_Modules'
-sys.path.append(file_path)
+# file_path = '../Python_Modules'
+# sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
 from subprocess import Popen, PIPE
