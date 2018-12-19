@@ -3,6 +3,7 @@
 # 19.12.2018
 
 import unittest
+import datetime
 import requests
 from requests import get
 
@@ -25,9 +26,23 @@ class TestApi():
     # Test--> if the statuscode is 200
     def test_status_response(self, test_url = test_url):
         print 'Get Statuscode'
-        #assert requests.get('http://192.168.99.100:8000/?service=CSW&version=2.0.2&request=GetSimilarityBBox&idone=2&idtwo=24')
         response = requests.get(self.test_url)
         assert response.status_code == 200
 
         response = requests.get(self.test_urlBB)
         assert response.status_code == 200
+
+    # Test--> The Timeresponse from the Url's doesnt take longer then 200ms
+    def test_time_response_Similarrecords(self, test_url = test_url):
+        r = requests.get(test_url, timeout=6)
+        r.raise_for_status()
+        responseTime = str(round(r.elapsed.total_seconds(),2))
+        assert responseTime < '200'
+    
+    def test_time_response_SimilarBBox(self, test_url = test_url):
+       r = requests.get(self.test_urlBB, timeout=6)
+       r.raise_for_status()
+       responseTime = str(round(r.elapsed.total_seconds(),2))
+       assert responseTime < '200'
+
+    
