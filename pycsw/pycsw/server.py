@@ -664,11 +664,11 @@ class Csw(object):
         LOGGER.info('Writing response.')
 
          # neuer code für unsere API html anzeigen zu können TANDIK
-        if isinstance(self.response, str):
-            f_path = abspath('/usr/lib/python3.5/site-packages/pycsw/page.html')
-            if exists(f_path):
-                with open(f_path) as f:
-                    return f.read()
+        # if isinstance(self.response, str):
+        #     f_path = abspath('/usr/lib/python3.5/site-packages/pycsw/page.html')
+        #     if exists(f_path):
+        #         with open(f_path) as f:
+        #             return f.read()
 
         if hasattr(self, 'soap') and self.soap:
             self._gen_soap_wrapper()

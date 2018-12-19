@@ -48,7 +48,8 @@ import logging
 import urllib
 import sqlite3
 import codecs
-
+import webbrowser
+from os.path import abspath, exists
 LOGGER = logging.getLogger(__name__)
 
 
@@ -166,8 +167,15 @@ class Csw2(object):
     # Öffnen der Html page TAN
     def openmap(self):
         print('Aysel')
-        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
-        print(f.read())
+        #f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
+        #print(f.read())
+       # webbrowser.open_new(f.read())
+
+
+        f_path = abspath('/usr/lib/python3.5/site-packages/pycsw/page.html')
+        if exists(f_path):
+            with open(f_path) as f:
+                return f.read()
 
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''
