@@ -9,6 +9,7 @@ import sys
 import json
 import sqlite3
 import tempfile
+import getBoundingBox
 
 # add local modules folder
 file_path = '../Python_Modules'
@@ -30,7 +31,7 @@ import ogr2ogr
 @click.option('--name', prompt="File name", help="File name with extension")
 @click.option('--clear', default=False, help='Argument wether you want to display only the Output \nOptions: 1, yes, y and true')
 def main(path, name, clear):
-    res = getBoundingBox(name, path)
+    res = getPolygon(name, path)
     if clear:
         click.clear()
     if res[0] is not None:
@@ -39,15 +40,16 @@ def main(path, name, clear):
         click.echo(res[1])
     
 
-def getBoundingBox(name, path):
-    """returns the bounding Box of supported Datatypes and standards in WGS84.
+def getPolygon(name, path):
+    """returns the Convex Hull of supported Datatypes and standards in WGS84.
 
     supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc), GeoPackage (.gpkg), all ISO19xxx standardised formats and CSV on the web
     
     @param path Path to the file
     @param name name of the file with extension
-    @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
+    @returns a Convex Hull in first place of a tuple as Array. Points in WGS84 ([(long, lat), (long, lat), ...], None)
     """
+
     # connect name and path to file
     filepath = "%s\%s" % (path, name)
     # get file extension
@@ -60,11 +62,16 @@ def getBoundingBox(name, path):
         try:
             myshp = open(filepath, "rb")
             sf = shapefile.Reader(shp=myshp)
+            shapes = sf.shapes()
+            pointList = []
+            for shape in shapes:
+                for points in shape.points:
+                    pointList.append(map(tuple, points))
         # error
         except:
             return (None, "File Error!")
         else: # if no error accured
-            return (sf.bbox, None)
+            return (convex_hull(pointList), None)
 
 #################################################################
 
@@ -72,92 +79,39 @@ def getBoundingBox(name, path):
     elif file_extension in (".json" , ".geojson"):
         try:
             myGeojson = pygeoj.load(filepath=filepath)
-            return (myGeojson.bbox, None)
+            pointList = []
 
-        # except ValueError: # if geojson is not a featureCollection
-        #     myJson = open(filepath, "rb")
-        #     myJson = json.load(myJson)
+            def getCoordinates(listInList):
+                coordinates = []
+                for sublist in listInList:
+                    if type(sublist) is list:
+                        if type(sublist[0]) is list:
+                            coordinates.extend(getCoordinates(sublist))
+                        else:
+                            coordinates.extend(listInList)
+                            break
+                    else:
+                        coordinates.append(listInList)
+                        break
+                return coordinates
 
-        #     # raw FeatureCollection
-        #     myGeojson = {
-        #         "type": "FeatureCollection",
-        #         "features": []
-        #     }
+            for features in myGeojson:
+                pointList.extend(list(map(tuple, getCoordinates(features.geometry.coordinates))))
 
-        #     myGeojson.get("features").append(myJson)
-        #     myGeojson = pygeoj.load(data=myGeojson)
-        #     return (myGeojson.bbox, None)
+
+            return (convex_hull(pointList), None)
         # errors
         except:
             return (None, "File Error!")
 
 #################################################################
 
-    elif file_extension in (".tif", ".tiff"):
-        # @see https://stackoverflow.com/questions/2922532/obtain-latitude-and-longitude-from-a-geotiff-file
-        try:
-            # get the existing coordinate system
-            ds = gdal.Open(filepath)
-            old_cs= osr.SpatialReference()
-            old_cs.ImportFromWkt(ds.GetProjectionRef())
-
-            # create the new coordinate system
-            wgs84_wkt = """
-            GEOGCS["WGS 84",
-                DATUM["WGS_1984",
-                    SPHEROID["WGS 84",6378137,298.257223563,
-                        AUTHORITY["EPSG","7030"]],
-                    AUTHORITY["EPSG","6326"]],
-                PRIMEM["Greenwich",0,
-                    AUTHORITY["EPSG","8901"]],
-                UNIT["degree",0.01745329251994328,
-                    AUTHORITY["EPSG","9122"]],
-                AUTHORITY["EPSG","4326"]]"""
-            new_cs = osr.SpatialReference()
-            new_cs .ImportFromWkt(wgs84_wkt)
-
-            # create a transform object to convert between coordinate systems
-            transform = osr.CoordinateTransformation(old_cs,new_cs) 
-
-            #get the point to transform, pixel (0,0) in this case
-            width = ds.RasterXSize
-            height = ds.RasterYSize
-            gt = ds.GetGeoTransform()
-            minx = gt[0]
-            miny = gt[3] + width*gt[4] + height*gt[5] 
-            maxx = gt[0] + width*gt[1] + height*gt[2]
-            maxy = gt[3] 
-
-            #get the coordinates in lat long
-            latlongmin = transform.TransformPoint(minx,miny)
-            latlongmax = transform.TransformPoint(maxx,maxy)
-            bbox = [latlongmin[0], latlongmin[1], latlongmax[0], latlongmax[1]]
-            return (bbox, None)
-        # errors
-        except:
-            return (None, "File Error or TIFF is not GeoTIFF")
-
-#################################################################
-
-    # netCDF handeling
-    elif file_extension == ".nc":
-        try:
-            # https://gis.stackexchange.com/questions/270165/gdal-to-acquire-netcdf-like-metadata-structure-in-python
-            ds = xr.open_dataset(filepath)
-            # transform coordinates section in a dictionary
-            coordinates = ds.to_dict()['coords']
-            # get the coordinates as a list
-            lats = coordinates['latitude']['data']
-            longs = coordinates['longitude']['data']
-
-            # taking the smallest and highest coordinates from the lists
-            bbox = [min(longs), min(lats), max(longs), max(lats)]
-            return (bbox, None)
-        # errors
-        except KeyError:
-            return (None, "coordinate names may be spelled wrong: should be 'latitude'/'longitude")
-        except:
-            return (None, "File Error!")
+    elif file_extension in (".tif", ".tiff", ".nc"):
+        bbox = getBoundingBox.getBoundingBox(name, path)
+        if bbox[1] is None:
+            return ([(bbox[0][0], bbox[0][1]), (bbox[0][0], bbox[0][3]), (bbox[0][2], bbox[0][3]), (bbox[0][2], bbox[0][1])], None)
+        else:
+            return bbox
 
 #################################################################
 
@@ -167,7 +121,7 @@ def getBoundingBox(name, path):
         try:
             conn = sqlite3.connect(filepath)
             c = conn.cursor()
-            c.execute("""   SELECT min(min_x), min(min_y), max(max_x), max(max_y), srs_id
+            c.execute("""   SELECT min_x, min_y, max_x, max_y, srs_id
                             FROM gpkg_contents
                             WHERE NOT srs_id = 4327
                             GROUP BY srs_id
@@ -181,23 +135,15 @@ def getBoundingBox(name, path):
             for line in row:
                 bboxes.append([line[0], line[1], line[2], line[3], line[4]])
             
-            wgs84bboxen = []
+            wgs84points = []
             for bbox in bboxes:
-                box = CRSTransform(bbox[0], bbox[1], bbox[4])
-                box.extend(CRSTransform(bbox[2], bbox[3], bbox[4]))
-                wgs84bboxen.append(box)
+                wgs84points.append(CRSTransform(bbox[0], bbox[1], bbox[4]))
+                wgs84points.append(CRSTransform(bbox[0], bbox[3], bbox[4]))
+                wgs84points.append(CRSTransform(bbox[2], bbox[1], bbox[4]))
+                wgs84points.append(CRSTransform(bbox[2], bbox[3], bbox[4]))
 
-            bbox = [wgs84bboxen[0][0], wgs84bboxen[0][1], wgs84bboxen[0][2], wgs84bboxen[0][3]]
-            for wgs84Box in wgs84bboxen:
-                if wgs84Box[0] < bbox[0]:
-                    bbox[0] = wgs84Box[0]
-                if wgs84Box[1] < bbox[1]:
-                    bbox[1] = wgs84Box[1]
-                if wgs84Box[2] > bbox[2]:
-                    bbox[2] = wgs84Box[2]
-                if wgs84Box[3] > bbox[3]:
-                    bbox[3] = wgs84Box[3]
-            return(bbox, None)
+            return(convex_hull(wgs84points), None)
+
         except LookupError as e:
             return(None, e)
         except:
@@ -221,6 +167,8 @@ def getBoundingBox(name, path):
             header = next(head)[0].replace(";", ",").split(",")
             lng=None 
             lat=None
+
+
             # searching for valid names for latitude and longitude
             for t in header:
                 if t == "longitude":
@@ -234,14 +182,18 @@ def getBoundingBox(name, path):
                 if t == "lat":
                     lat = "lat"
 
+
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
             if(lat is None or lng is None):
                 raise ValueError("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
+
+
         # errors
         except ValueError as e:
             return (None, e)
         except:
             return (None, "File Error!")
+
         
         # if no error accured
         else:
@@ -250,7 +202,7 @@ def getBoundingBox(name, path):
                 # get all coordinates from found collums
                 latitudes = df[lng].tolist()
                 longitudes = df[lat].tolist()
-
+                
             # in case the words are separated by a ';' insted of a comma
             except KeyError:
                 try:
@@ -263,13 +215,16 @@ def getBoundingBox(name, path):
                 # the csv is not valid
                 except KeyError:
                     return (None, "Pleas seperate your data with either ',' or ';'!")
+
             # errors
             except:
                 return (None, "File Error: File not found or check if your csv file is valid to 'csv on the web'")
 
-        # taking the smallest and highest coordinates from the lists if no exceptions accured
-        bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
-        return (bbox, None)
+            pointList = []
+            for i in range(len((latitudes))):
+                pointList.append((longitudes[i], latitudes[i]))
+
+            return (convex_hull(pointList), None)
 
 #################################################################
 
@@ -282,11 +237,10 @@ def getBoundingBox(name, path):
                 curDir = os.getcwd()
                 os.chdir(tmpdirname)
                 ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
-                # get boundingbox from generated GeoJSON file
-                myGeojson = pygeoj.load(filepath="output.json")
+                res = getPolygon("output.json", tmpdirname)
+                print(len(res[0]))
                 os.chdir(curDir)
-            # delete generated GeoJSON file
-            return (myGeojson.bbox, None)
+            return res
         # errors
         except:
             return (None, "file not found or your gml/xml/kml data is not valid")
@@ -297,7 +251,7 @@ def getBoundingBox(name, path):
 
 #################################################################
 
-def CRSTransform(Lat, Long, refsys):
+def CRSTransform(Long, Lat, refsys):
     # Coordinate Reference System (CRS)
     SourceEPSG = refsys
     TargetEPSG = 4326
@@ -309,9 +263,54 @@ def CRSTransform(Lat, Long, refsys):
     target.ImportFromEPSG(TargetEPSG)
 
     transform = osr.CoordinateTransformation(source, target)
-    point = ogr.CreateGeometryFromWkt("POINT (%s %s)" % (Lat, Long))
+    point = ogr.CreateGeometryFromWkt("POINT (%s %s)" % (Long, Lat))
     point.Transform(transform)
-    return [point.GetX(),point.GetY()]
+    return (point.GetX(),point.GetY())
+
+
+def convex_hull(points):
+    """Computes the convex hull of a set of 2D points.
+
+    Input: an iterable sequence of (x, y) pairs representing the points.
+    Output: a list of vertices of the convex hull in counter-clockwise order,
+      starting from the vertex with the lexicographically smallest coordinates.
+    Implements Andrew's monotone chain algorithm. O(n log n) complexity.
+    @see https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
+    """
+
+    # Sort the points lexicographically (tuples are compared lexicographically).
+    # Remove duplicates to detect the case we have just one unique point.
+    points = sorted(set(points))
+
+    # Boring case: no points or a single point, possibly repeated multiple times.
+    if len(points) <= 1:
+        return points
+
+    # 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
+    # Returns a positive value, if OAB makes a counter-clockwise turn,
+    # negative for clockwise turn, and zero if the points are collinear.
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    # Build lower hull 
+    lower = []
+    for p in points:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+
+    # Build upper hull
+    upper = []
+    for p in reversed(points):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+
+    # Concatenation of the lower and upper hulls gives the convex hull.
+    # Last point of each list is omitted because it is repeated at the beginning of the other list. 
+    return lower[:-1] + upper[:-1]
+
+
 
 
 # Main method
