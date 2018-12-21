@@ -85,6 +85,7 @@ COPY README.rst .
 
 RUN pip3 install .
 
+
 COPY tests tests/
 COPY docker docker/
 
