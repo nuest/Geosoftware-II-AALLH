@@ -42,7 +42,6 @@ from six.moves.configparser import SafeConfigParser
 import sys
 from time import time
 import wsgiref.util
-
 from pycsw.core.etree import etree
 from pycsw import oaipmh, opensearch, sru
 from pycsw.plugins.profiles import profile as pprofile
@@ -50,37 +49,9 @@ import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
 from pycsw.ogc.csw import csw2, csw3
 
-from flask import Flask, request
-from pycsw import __version__ as pycsw_version
-#from pycsw.server import Csw
-
 LOGGER = logging.getLogger(__name__)
-APP = Flask(__name__)
 
 class Csw(object):
-
-    @APP.route('/csw')
-    def csw_wrapper():
-        """CSW wrapper"""
-
-        LOGGER.info('Running pycsw %s', pycsw_version)
-
-        #pycsw_config = some_dict  # really comes from somewhere
-
-        # initialize pycsw
-        # pycsw_config: either a ConfigParser object or a dict of
-        # the pycsw configuration
-        #
-        # env: dict of (HTTP) environment (defaults to os.environ)
-        # 
-        # version: defaults to '3.0.0'
-        my_csw = Csw(request.environ, version='2.0.2')
-
-        # dispatch the request
-        http_status_code, response = my_csw.dispatch_wsgi()
-
-        return response, http_status_code, {'Content-type': 'hallo'}
-
 
     """ Base CSW server """
     def __init__(self, rtconfig=None, env=None, version='3.0.0'):
@@ -862,6 +833,9 @@ class Csw(object):
             ipaddress = self.environ['HTTP_X_FORWARDED_FOR'].split(',')[0].strip()
         else:
             ipaddress = self.environ['REMOTE_ADDR']
+        
+        print(ipaddress)
+        print(self.config.get('manager', 'allowed_ips').split(','))
 
         if not self.config.has_option('manager', 'allowed_ips') or \
         (self.config.has_option('manager', 'allowed_ips') and not

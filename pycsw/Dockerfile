@@ -74,7 +74,7 @@ RUN pip3 install --upgrade pip setuptools \
   && pip3 install --requirement requirements.txt \
   && pip3 install --requirement requirements-standalone.txt \
   && pip3 install --requirement requirements-pg.txt \
-  && pip3 install gunicorn
+  && pip3 install gunicorn 
 
 COPY pycsw pycsw/
 COPY bin bin/
@@ -84,7 +84,6 @@ COPY VERSION.txt .
 COPY README.rst .
 
 RUN pip3 install .
-
 
 COPY tests tests/
 COPY docker docker/

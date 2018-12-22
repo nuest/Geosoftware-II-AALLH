@@ -485,7 +485,7 @@ class Csw2(object):
                 self.parent.kvp['elementsetname'])
     
         # erster knoten, kann man übernehmen 
-        node = etree.Element(util.nspath_eval('csw:GetSimilarRecordsResponse',
+        node = etree.Element(util.nspath_eval('GetSimilarRecordsResponse',
         self.parent.context.namespaces), nsmap=self.parent.context.namespaces)
 
         requestID = self.parent.kvp['id'][0]
@@ -500,7 +500,7 @@ class Csw2(object):
             # if there are no similar records for the given id 
             # or Exception?
             if not values:
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities='No similar records!')
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarityValues='No similar records!')
             
             else:
                 valuesList = []
@@ -514,7 +514,7 @@ class Csw2(object):
 
                 print(stringList)
                 
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities=stringList)
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarityValues=stringList)
        
             return node
 
@@ -530,7 +530,7 @@ class Csw2(object):
             # if there are no similar records for the given id 
             # or Exception?
             if not values:
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities='No similar records!')
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarityValues='No similar records!')
             
             else:
                 valuesList = []
@@ -544,7 +544,7 @@ class Csw2(object):
 
                 print(stringList)
                 
-                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarities=stringList)
+                etree.SubElement(node, 'ListOfSimilarRecords', RecordIDsAndSimilarityValues=stringList)
        
             return node
     
@@ -1767,6 +1767,7 @@ class Csw2(object):
         ''' Parse POST XML '''
 
         request = {}
+        print(postdata)
         try:
             LOGGER.info('Parsing %s', postdata)
             doc = etree.fromstring(postdata, self.parent.context.parser)
