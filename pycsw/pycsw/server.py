@@ -679,7 +679,7 @@ class Csw(object):
         
         # new requests for the similarities should be always in json format (@author: Anika Graupner)
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
-                self.kvp['request'] == 'GetSimilarRecords' or self.kvp['request'] == 'OpenMap'):
+                self.kvp['request'] == 'GetSimilarRecords'):
             
                 if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
                     self.kvp['outputformat'] == 'application/xml'):
@@ -697,7 +697,29 @@ class Csw(object):
                     from pycsw.core.formats import fmt_json
                     response = fmt_json.xml2json(response,
                                                 self.context.namespaces,
-                                                self.pretty_print)                                       
+                                                self.pretty_print)
+                                                
+        # statt Open Map muss hier das von Aysel hin 
+        elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
+                self.kvp['request'] == 'OpenMap'):
+            
+                if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
+                    self.kvp['outputformat'] == 'application/xml'):
+                        if 'outputformat' in self.kvp:
+                            self.contenttype = self.kvp['outputformat']
+                        else:
+                            self.contenttype = self.mimetype
+
+                        xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
+                                '\n' % self.encoding)
+                        appinfo = '<!-- pycsw %s -->\n' % self.context.version 
+
+                else:
+                    self.contenttype = self.kvp['request']
+                    from pycsw.core.formats import fmt_json
+                    response = fmt_json.xml2json(response,
+                                                self.context.namespaces,
+                                                self.pretty_print)                                        
 
         else:  # it's XML
             if 'outputformat' in self.kvp:
