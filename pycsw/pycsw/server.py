@@ -546,8 +546,10 @@ class Csw(object):
 
             if self.kvp['request'] == 'GetCapabilities':
                 self.response = self.iface.getcapabilities()
-            elif self.kvp['request'] == 'GetSimilarRecords':
+            elif self.kvp['request'] == 'GetSimilarRecords': #GRA
                 self.response = self.iface.getsimilarrecords()
+            elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
+                self.response = self.iface.getsimilaritybbox()
             elif self.kvp['request'] == 'OpenMap':
                 self.response = self.iface.openmap()
             elif self.kvp['request'] == 'DescribeRecord':
@@ -597,15 +599,15 @@ class Csw(object):
 
         return self._write_response()
 
-    def getsimilarrecords(self):
-        return self.iface.getsimilarrecords()
-    
-    def openmap(self):
-        return self.iface.openmap()
-
     def getcapabilities(self):
         """ Handle GetCapabilities request """
         return self.iface.getcapabilities()
+
+    def getsimilarrecords(self): #GRA
+        return self.iface.getsimilarrecords()
+    
+    def getsimilaritybbox(self): #TAN
+        return self.iface.getsimilaritybbox()
 
     def describerecord(self):
         """ Handle DescribeRecord request """
@@ -699,9 +701,9 @@ class Csw(object):
                                                 self.context.namespaces,
                                                 self.pretty_print)
                                                 
-        # statt Open Map muss hier das von Aysel hin 
+        
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
-                self.kvp['request'] == 'OpenMap'):
+                self.kvp['request'] == 'GetSimilarityBBox'):
             
                 if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
                     self.kvp['outputformat'] == 'application/xml'):
