@@ -455,7 +455,7 @@ class Csw2(object):
         if self.parent.requesttype == 'GET':
             self.parent.kvp['id'] = self.parent.kvp['id'].split(',')
         
-        # wrong outputformat in the request  
+        # # wrong outputformat in the request  
         if ('outputformat' in self.parent.kvp and
             self.parent.kvp['outputformat'] not in
             self.parent.context.model['operations']['GetRecordById']['parameters']
@@ -463,25 +463,7 @@ class Csw2(object):
             return self.exceptionreport('InvalidParameterValue',
             'outputformat', 'Invalid outputformat parameter %s' %
             self.parent.kvp['outputformat'])
-
-        # wrong outputschema in the request  
-        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
-            self.parent.context.model['operations']['GetRecordById']['parameters']
-            ['outputSchema']['values']):
-            return self.exceptionreport('InvalidParameterValue',
-            'outputschema', 'Invalid outputschema parameter %s' %
-            self.parent.kvp['outputschema'])
-
-        if 'elementsetname' not in self.parent.kvp:
-            self.parent.kvp['elementsetname'] = 'summary'
-        else:
-            if (self.parent.kvp['elementsetname'] not in
-                self.parent.context.model['operations']['GetRecordById']['parameters']
-                ['ElementSetName']['values']):
-                return self.exceptionreport('InvalidParameterValue',
-                'elementsetname', 'Invalid elementsetname parameter %s' %
-                self.parent.kvp['elementsetname'])
-
+        
         # in the following, the output for the response is build with python  xml.etree.ElementTree as usual in pycsw
         # in the server.py the xml is changed to json with the pycsw xml2json function 
 
@@ -694,25 +676,6 @@ class Csw2(object):
             return self.exceptionreport('InvalidParameterValue',
             'outputformat', 'Invalid outputformat parameter %s' %
             self.parent.kvp['outputformat'])
-
-        # wrong outputschema 
-        if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
-            self.parent.context.model['operations']['GetRecordById']['parameters']
-            ['outputSchema']['values']):
-            return self.exceptionreport('InvalidParameterValue',
-            'outputschema', 'Invalid outputschema parameter %s' %
-            self.parent.kvp['outputschema'])
-
-
-        if 'elementsetname' not in self.parent.kvp:
-            self.parent.kvp['elementsetname'] = 'summary'
-        else:
-            if (self.parent.kvp['elementsetname'] not in
-                self.parent.context.model['operations']['GetRecordById']['parameters']
-                ['ElementSetName']['values']):
-                return self.exceptionreport('InvalidParameterValue',
-                'elementsetname', 'Invalid elementsetname parameter %s' %
-                self.parent.kvp['elementsetname'])
     
         # parent node
         node = etree.Element('GetSimilarityBBoxResponse')
