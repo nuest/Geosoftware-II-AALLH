@@ -42,7 +42,6 @@ from six.moves.configparser import SafeConfigParser
 import sys
 from time import time
 import wsgiref.util
-
 from pycsw.core.etree import etree
 from pycsw import oaipmh, opensearch, sru
 from pycsw.plugins.profiles import profile as pprofile
@@ -98,18 +97,6 @@ class Csw(object):
         if self.request_version == '2.0.2':
             self.iface = csw2.Csw2(server_csw=self)
             self.context.set_model('csw')
-
-        # define CSW implementation object (default CSW3)
-        #self.request_version = version
-
-        #if 'version' not in self.kvp:
-            #self.iface = api_functions.Api(server_api=self)
-        #elif self.request_version == '2.0.2':
-            #self.iface = csw2.Csw2(server_csw=self)
-            #self.context.set_model('csw')
-        #elif self.request_version == '3.0.0':
-            #self.iface = csw3.Csw3(server_csw=self)
-            #self.context.set_model('csw')
         
         # load user configuration
         try:
@@ -559,8 +546,10 @@ class Csw(object):
 
             if self.kvp['request'] == 'GetCapabilities':
                 self.response = self.iface.getcapabilities()
-            elif self.kvp['request'] == 'GetSimilarRecords':
+            elif self.kvp['request'] == 'GetSimilarRecords': #GRA
                 self.response = self.iface.getsimilarrecords()
+            elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
+                self.response = self.iface.getsimilaritybbox()
             elif self.kvp['request'] == 'OpenMap':
                 self.response = self.iface.openmap()
             elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
@@ -612,18 +601,15 @@ class Csw(object):
 
         return self._write_response()
 
-    def getsimilaritybbox(self): #TAN
-        return self.iface.getsimilaritybbox()
-
-    def getsimilarrecords(self):
-        return self.iface.getsimilarrecords()
-    
-    def openmap(self):
-        return self.iface.openmap()
-
     def getcapabilities(self):
         """ Handle GetCapabilities request """
         return self.iface.getcapabilities()
+
+    def getsimilarrecords(self): #GRA
+        return self.iface.getsimilarrecords()
+    
+    def getsimilaritybbox(self): #TAN
+        return self.iface.getsimilaritybbox()
 
     def describerecord(self):
         """ Handle DescribeRecord request """
@@ -697,25 +683,47 @@ class Csw(object):
         
         # new requests for the similarities should be always in json format (@author: Anika Graupner)
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
-                self.kvp['request'] == 'GetSimilarRecords' or self.kvp['request'] == 'GetSimilarityBBox'):
+                self.kvp['request'] == 'GetSimilarRecords'):
             
-            if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
-                self.kvp['outputformat'] == 'application/xml'):
-                    if 'outputformat' in self.kvp:
-                        self.contenttype = self.kvp['outputformat']
-                    else:
-                        self.contenttype = self.mimetype
+                if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
+                    self.kvp['outputformat'] == 'application/xml'):
+                        if 'outputformat' in self.kvp:
+                            self.contenttype = self.kvp['outputformat']
+                        else:
+                            self.contenttype = self.mimetype
 
-                    xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
-                               '\n' % self.encoding)
-                    appinfo = '<!-- pycsw %s -->\n' % self.context.version 
+                        xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
+                                '\n' % self.encoding)
+                        appinfo = '<!-- pycsw %s -->\n' % self.context.version 
 
-            else:
-                self.contenttype = self.kvp['request']
-                from pycsw.core.formats import fmt_json
-                response = fmt_json.xml2json(response,
-                                            self.context.namespaces,
-                                            self.pretty_print)                                       
+                else:
+                    self.contenttype = self.kvp['request']
+                    from pycsw.core.formats import fmt_json
+                    response = fmt_json.xml2json(response,
+                                                self.context.namespaces,
+                                                self.pretty_print)
+                                                
+        
+        elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
+                self.kvp['request'] == 'GetSimilarityBBox'):
+            
+                if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
+                    self.kvp['outputformat'] == 'application/xml'):
+                        if 'outputformat' in self.kvp:
+                            self.contenttype = self.kvp['outputformat']
+                        else:
+                            self.contenttype = self.mimetype
+
+                        xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
+                                '\n' % self.encoding)
+                        appinfo = '<!-- pycsw %s -->\n' % self.context.version 
+
+                else:
+                    self.contenttype = self.kvp['request']
+                    from pycsw.core.formats import fmt_json
+                    response = fmt_json.xml2json(response,
+                                                self.context.namespaces,
+                                                self.pretty_print)                                        
 
         else:  # it's XML
             if 'outputformat' in self.kvp:
@@ -851,6 +859,9 @@ class Csw(object):
             ipaddress = self.environ['HTTP_X_FORWARDED_FOR'].split(',')[0].strip()
         else:
             ipaddress = self.environ['REMOTE_ADDR']
+        
+        print(ipaddress)
+        print(self.config.get('manager', 'allowed_ips').split(','))
 
         if not self.config.has_option('manager', 'allowed_ips') or \
         (self.config.has_option('manager', 'allowed_ips') and not
