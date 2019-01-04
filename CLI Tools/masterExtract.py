@@ -1,7 +1,10 @@
 import click
-import getBoundingBox as box
-import getTimeExtent as timeext
+
 import extractGeoDataFromFolder as fext
+import getBoundingBox as box
+import getPolygon as poly
+import getTimeExtent as timeext
+
 
 # asking for parameters in command line
 @click.command()
@@ -9,28 +12,53 @@ import extractGeoDataFromFolder as fext
 @click.option('--clear','-c', default=False, is_flag=True, help='Clear screen before showing results')
 @click.option('--time', '-t', default=False, is_flag=True, help="execute time extraction for one file")
 @click.option('--space', '-s', default=False, is_flag=True, help="execute boundingbox extraction for one file")
-def main(path, clear, time, space):
+@click.option('--hull', '-h', default=False, is_flag=True, help="execute convex-hull extraction for one file")
+def main(path, clear, time, space, hull):
     output = []
-    if time:
+
+    name = ""
+    if time or space or hull:
         name = click.prompt("Pleas enter filename")
+
+    def timeOption(path, name):
         res = timeext.getTimeExtent(name, path)
-        output.append("Timeextent:")
         if res[0] is not None:
-            output.append(res[0])
+            return res[0]
         else:
-            output.append(res[1])
+            return res[1]
+
+    def spaceOption(path, name):
+        res = box.getBoundingBox(name, path)
+        if res[0] is not None:
+            return res[0]
+        else:
+            return res[1]
+
+    def polyOption(path, name):
+        res = poly.getPolygon(name, path)
+        if res[0] is not None:
+            return res[0]
+        else:
+            return res[1]
+
+#################################################################
+
+    if time:
+        output.append("Timeextent:")
+        output.append(timeOption(path, name))
+        output.append("\n")
     
     if space:
-        if not time:
-            name = click.prompt("Pleas enter filename")
-        res = box.getBoundingBox(name, path)
         output.append("Spatialextent:")
-        if res[0] is not None:
-            output.append(res[0])
-        else:
-            output.append(res[1])
+        output.append(spaceOption(path, name))
+        output.append("\n")
 
-    if not (time or space):
+    if hull:
+        output.append("Spatialextent as Convex Hull:")
+        output.append(polyOption(path, name))
+        output.append("\n")
+
+    if not (time or space or hull):
         fext.extractFromFolder(path, clear)
     else:
         if clear:

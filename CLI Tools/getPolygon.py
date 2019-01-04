@@ -51,14 +51,13 @@ def getPolygon(name, path):
     """
 
     # connect name and path to file
-    filepath = "%s\%s" % (path, name)
+    filepath = os.path.join(path, name)
     # get file extension
     filename, file_extension = os.path.splitext(filepath)
 
 #################################################################
 
-    #shapefile handelig
-    if file_extension == ".shp":
+    def shapefileCase(filepath):
         try:
             myshp = open(filepath, "rb")
             sf = shapefile.Reader(shp=myshp)
@@ -73,10 +72,7 @@ def getPolygon(name, path):
         else: # if no error accured
             return (convex_hull(pointList), None)
 
-#################################################################
-
-    # geojson handeling
-    elif file_extension in (".json" , ".geojson"):
+    def jsonCase(filepath):
         try:
             myGeojson = pygeoj.load(filepath=filepath)
             pointList = []
@@ -104,19 +100,14 @@ def getPolygon(name, path):
         except:
             return (None, "File Error!")
 
-#################################################################
-
-    elif file_extension in (".tif", ".tiff", ".nc"):
+    def ncTiffCase(name, path):
         bbox = getBoundingBox.getBoundingBox(name, path)
         if bbox[1] is None:
             return ([(bbox[0][0], bbox[0][1]), (bbox[0][0], bbox[0][3]), (bbox[0][2], bbox[0][3]), (bbox[0][2], bbox[0][1])], None)
         else:
             return bbox
 
-#################################################################
-
-    # handeling geoPackage
-    elif file_extension == ".gpkg":
+    def geoPackageCase(filepath):
         # @see https://stackoverflow.com/questions/35945437/python-gdal-projection-conversion-from-wgs84-to-nztm2000-is-not-correct
         try:
             conn = sqlite3.connect(filepath)
@@ -154,10 +145,7 @@ def getPolygon(name, path):
             except:
                 pass
 
-#################################################################
-
-    # csv or csv formated textfile handeling (csv on the web)
-    elif file_extension in (".csv", ".txt"):
+    def csvCase(filepath):
         # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         try: # finding the correct collums for latitude and longitude
             csvfile = open(filepath)
@@ -165,23 +153,31 @@ def getPolygon(name, path):
             # get the headline an convert, if possible, ';' to ',' 
             # and seperate each word devided by a ',' into an array 
             header = next(head)[0].replace(";", ",").split(",")
-            lng=None 
-            lat=None
-
 
             # searching for valid names for latitude and longitude
-            for t in header:
-                if t == "longitude":
-                    lng = "longitude"
-                if t == "latitude":
-                    lat = "latitude"
-                if t == "lon":
-                    lng = "lon"
-                if t == "lng":
-                    lng = "lng"
-                if t == "lat":
-                    lat = "lat"
-
+            def getLatLon(header):
+                """get the correct names of the collumns holding the coordinates
+                @param header Header of the CSV
+                @returns (lon, lat) where lon, lat are the collum names
+                """
+                lng=None 
+                lat=None
+                for t in header:
+                    if t == "longitude":
+                        lng = "longitude"
+                    if t == "latitude":
+                        lat = "latitude"
+                    if t == "lon":
+                        lng = "lon"
+                    if t == "long":
+                        lng = "long"
+                    if t == "lng":
+                        lng = "lng"
+                    if t == "lat":
+                        lat = "lat"
+                return (lng, lat)
+            
+            lng, lat = getLatLon(header)
 
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
             if(lat is None or lng is None):
@@ -226,10 +222,7 @@ def getPolygon(name, path):
 
             return (convex_hull(pointList), None)
 
-#################################################################
-
-    # gml handeling
-    elif file_extension in (".gml", ".xml", ".kml"):
+    def ISOCase(filepath):
         try:
             # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
             # convert the gml file to a GeoJSON file
@@ -238,13 +231,38 @@ def getPolygon(name, path):
                 os.chdir(tmpdirname)
                 ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
                 res = getPolygon("output.json", tmpdirname)
-                print(len(res[0]))
                 os.chdir(curDir)
             return res
         # errors
         except:
             return (None, "file not found or your gml/xml/kml data is not valid")
-                
+
+#################################################################
+
+    #shapefile handelig
+    if file_extension == ".shp":
+        return shapefileCase(filepath)
+
+    # geojson handeling
+    elif file_extension in (".json" , ".geojson"):
+        return jsonCase(filepath)
+
+    # netCDF and GeoTiff handeling
+    elif file_extension in (".tif", ".tiff", ".nc"):
+        return ncTiffCase(name, path)
+
+    # GeoPackage handeling
+    elif file_extension == ".gpkg":
+        return geoPackageCase(filepath)
+
+    # csv or csv formated textfile handeling (csv on the web)
+    elif file_extension in (".csv", ".txt"):
+        return csvCase(filepath)
+
+    # gml handeling
+    elif file_extension in (".gml", ".xml", ".kml"):
+        return ISOCase(filepath)
+
     # if the extension has not been implemented yet or won't be supported
     else:
         return (None, "type %s not yet supported" % file_extension)
