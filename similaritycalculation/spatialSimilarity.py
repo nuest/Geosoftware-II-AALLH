@@ -70,7 +70,6 @@ def similarArea(bboxA, bboxB):
         reachedPercentArea = floor(reachedPercentArea*100)/100
     # print(reachedPercentArea)
 
-
     return reachedPercentArea
 
 
@@ -78,7 +77,7 @@ def spatialDistance(bboxA, bboxB):
     distBetweenCenterPoints = None
     longerDistance = None
     if (bboxA[0] == bboxA[2]) and (bboxB[0] == bboxB[2]) and (bboxA[1] == bboxA[3]) and (bboxB[1] == bboxB[3]):
-        distBetweenCenterPoints = _getDistance((bboxA[0], bboxA[1]),(bboxB[0], bboxB[1]))
+        distBetweenCenterPoints = _getDistance((bboxA[0], bboxA[1]), (bboxB[0], bboxB[1]))
         longerDistance = 5
 
     else:

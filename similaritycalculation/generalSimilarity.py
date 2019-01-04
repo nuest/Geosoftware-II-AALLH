@@ -14,27 +14,26 @@ def sameDatatype(file1, file2):
 
     return 100 if same1>=0 or same2>=0 else 0
 
-def sameAuthor(file1, file2):
-    author1 = ""
-    author2 = ""
+# def sameAuthor(file1, file2):
+#     author1 = ""
+#     author2 = ""
 
-    return 100 if author1.lower() == author2.lower() else 0
+#     return 100 if author1.lower() == author2.lower() else 0
 
 def similarTitle(file1, file2):
     filename1, file_extension1 = os.path.splitext(file1)
     filename2, file_extension2 = os.path.splitext(file2)
 
-    countList = []
+    countList = 0
     if len(filename1) >= len(filename2):
         # searches for same caracters in both strings
         charList = []
         for i in filename2:
             if i not in charList:
                 charList.append(i)
-                countList.append(filename1.count(i))
+                countList += filename1.count(i)
 
-        count = functools.reduce(lambda x, y: x + y, countList)
-        percent = count*100/len(filename1)
+        percent = countList*100/len(filename1)
         percent = math.floor(percent*100)/100
         return percent
     else:
@@ -42,10 +41,9 @@ def similarTitle(file1, file2):
         for i in filename1:
             if i not in charList:
                 charList.append(i)
-                countList.append(filename1.count(i))
+                countList += filename1.count(i)
 
-        count = functools.reduce(lambda x, y: x + y, countList)
-        percent = count*100/len(filename1)
+        percent = countList*100/len(filename1)
         percent = math.floor(percent*100)/100
         return percent
 

@@ -8,7 +8,6 @@ import os
 import sys
 import json
 import sqlite3
-import tempfile
 
 # add local modules folder
 file_path = '../Python_Modules'
@@ -22,6 +21,7 @@ import pygeoj
 import shapefile
 import xarray as xr
 import ogr2ogr
+import numpy as np
 
 
 # asking for parameters in command line
@@ -33,33 +33,30 @@ def main(path, name, clear):
     res = getBoundingBox(name, path)
     if clear:
         click.clear()
-    if res[0] is not None:
+    if res[0] != None:
         click.echo(res[0])
     else:
         click.echo(res[1])
     
 
+
+
 def getBoundingBox(name, path):
     """returns the bounding Box of supported Datatypes and standards in WGS84.
 
-    supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc), GeoPackage (.gpkg), all ISO19xxx standardised formats and CSV on the web
+    supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc), GeoPackage (.gpkg), alle ISO19xxx standardisiete Formate, CSV on the web
     
     @param path Path to the file
     @param name name of the file with extension
     @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
     """
     # connect name and path to file
-    filepath = os.path.join(path, name)
+    filepath = "%s\%s" % (path, name)
     # get file extension
     filename, file_extension = os.path.splitext(filepath)
-
-#################################################################
-    def shapefileCase(filepath):
-        """Method for extracting the boundingbox of a shapefile
-
-        @param filepath Full path to shapefile
-        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
-        """
+    print(file_extension)
+    #shapefile handelig
+    if file_extension == ".shp":
         try:
             myshp = open(filepath, "rb")
             sf = shapefile.Reader(shp=myshp)
@@ -69,39 +66,30 @@ def getBoundingBox(name, path):
         else: # if no error accured
             return (sf.bbox, None)
 
-    def geojsonCase(filepath):
-        """Method for extracting the boundingbox of a valid GeoJSON file
 
-        @param filepath Full path to GeoJSON
-        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
-        """
+    # geojson handeling
+    elif file_extension == ".json" or file_extension == ".geojson":
         try:
             myGeojson = pygeoj.load(filepath=filepath)
             return (myGeojson.bbox, None)
+        except ValueError: # if geojson is not a featureCollection
+            myJson = open(filepath, "rb")
+            myJson = json.load(myJson)
 
-        # except ValueError: # if geojson is not a featureCollection
-        #     myJson = open(filepath, "rb")
-        #     myJson = json.load(myJson)
+            # raw FeatureCollection
+            myGeojson = {
+                "type": "FeatureCollection",
+                "features": []
+            }
 
-        #     # raw FeatureCollection
-        #     myGeojson = {
-        #         "type": "FeatureCollection",
-        #         "features": []
-        #     }
-
-        #     myGeojson.get("features").append(myJson)
-        #     myGeojson = pygeoj.load(data=myGeojson)
-        #     return (myGeojson.bbox, None)
+            myGeojson.get("features").append(myJson)
+            myGeojson = pygeoj.load(data=myGeojson)
+            return (myGeojson.bbox, None)
         # errors
         except:
             return (None, "File Error!")
 
-    def tiffCase(filepath):
-        """Method for extracting the boundingbox of a GeoTIFF
-
-        @param filepath Full path to GeoTIFF
-        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
-        """
+    elif file_extension == ".tif" or file_extension == ".tiff":
         # @see https://stackoverflow.com/questions/2922532/obtain-latitude-and-longitude-from-a-geotiff-file
         try:
             # get the existing coordinate system
@@ -145,12 +133,8 @@ def getBoundingBox(name, path):
         except:
             return (None, "File Error or TIFF is not GeoTIFF")
 
-    def netCDFCase(filepath):
-        """Method for extracting the boundingbox of a netCDF file
-
-        @param filepath Full path to netCDF file
-        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
-        """
+    # netCDF handeling
+    elif file_extension == ".nc":
         try:
             # https://gis.stackexchange.com/questions/270165/gdal-to-acquire-netcdf-like-metadata-structure-in-python
             ds = xr.open_dataset(filepath)
@@ -169,12 +153,8 @@ def getBoundingBox(name, path):
         except:
             return (None, "File Error!")
 
-    def geopackageCase(filepath):
-        """Method for extracting the boundingbox of a GeoPackage
-
-        @param filepath Full path to GeoPackage
-        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
-        """
+    # handeling geoPackage
+    elif file_extension == ".gpkg":
         # @see https://stackoverflow.com/questions/35945437/python-gdal-projection-conversion-from-wgs84-to-nztm2000-is-not-correct
         try:
             conn = sqlite3.connect(filepath)
@@ -187,7 +167,7 @@ def getBoundingBox(name, path):
             row = c.fetchall()
             bboxes = []
 
-            if row is None:
+            if row == None:
                 assert LookupError("No valid data detected (EPSG:4327 not supported)")
 
             for line in row:
@@ -220,13 +200,9 @@ def getBoundingBox(name, path):
             except:
                 pass
 
-    def csvCase(filepath):
-        """Method for extracting the boundingbox of a "CSV on the Web" formated file
-        Collums holding the coordinates must be named either longitude/lon/lng/long, latitude/lat
 
-        @param filepath Full path to CSV/text file
-        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
-        """
+    # csv or csv formated textfile handeling (csv on the web)
+    elif file_extension == ".csv" or file_extension == ".txt":
         # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         try: # finding the correct collums for latitude and longitude
             csvfile = open(filepath)
@@ -234,34 +210,23 @@ def getBoundingBox(name, path):
             # get the headline an convert, if possible, ';' to ',' 
             # and seperate each word devided by a ',' into an array 
             header = next(head)[0].replace(";", ",").split(",")
-
+            lng=None 
+            lat=None
             # searching for valid names for latitude and longitude
-            def getLatLon(header):
-                """get the correct names of the collumns holding the coordinates
-                @param header Header of the CSV
-                @returns (lon, lat) where lon, lat are the collum names
-                """
-                lng=None 
-                lat=None
-                for t in header:
-                    if t == "longitude":
-                        lng = "longitude"
-                    if t == "latitude":
-                        lat = "latitude"
-                    if t == "lon":
-                        lng = "lon"
-                    if t == "long":
-                        lng = "long"
-                    if t == "lng":
-                        lng = "lng"
-                    if t == "lat":
-                        lat = "lat"
-                return (lng, lat)
-            
-            lng, lat = getLatLon(header)
-            
+            for t in header:
+                if t == "longitude":
+                    lng = "longitude"
+                if t == "latitude":
+                    lat = "latitude"
+                if t == "lon":
+                    lng = "lon"
+                if t == "lng":
+                    lng = "lng"
+                if t == "lat":
+                    lat = "lat"
+
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
-            if(lat is None or lng is None):
+            if(lat == None or lng == None):
                 raise ValueError("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
         # errors
         except ValueError as e:
@@ -276,6 +241,10 @@ def getBoundingBox(name, path):
                 # get all coordinates from found collums
                 latitudes = df[lng].tolist()
                 longitudes = df[lat].tolist()
+                
+                # taking the smallest and highest coordinates from the lists
+                bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+                return (bbox, None)
 
             # in case the words are separated by a ';' insted of a comma
             except KeyError:
@@ -286,6 +255,9 @@ def getBoundingBox(name, path):
                     latitudes = df[lng].tolist()
                     longitudes = df[lat].tolist()
                     
+                    # taking the smallest and highest coordinates from the lists
+                    bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+                    return (bbox, None)
                 # the csv is not valid
                 except KeyError:
                     return (None, "Pleas seperate your data with either ',' or ';'!")
@@ -293,68 +265,34 @@ def getBoundingBox(name, path):
             except:
                 return (None, "File Error: File not found or check if your csv file is valid to 'csv on the web'")
 
-        # taking the smallest and highest coordinates from the lists if no exceptions accured
-        bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
-        return (bbox, None)
-
-    def ISOCase(filepath):
-        """Method for extracting the boundingbox of an ISO19xxx standardized file
-
-        @param filepath Full path to the ISO19xxx standardized file
-        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
-        """
+    # gml handeling
+    elif file_extension == ".gml" or file_extension == ".xml" or file_extension == ".kml":
         try:
             # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
             # convert the gml file to a GeoJSON file
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                curDir = os.getcwd()
-                os.chdir(tmpdirname)
-                ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
-                # get boundingbox from generated GeoJSON file
-                myGeojson = pygeoj.load(filepath="output.json")
-                os.chdir(curDir)
+            ogr2ogr.main(["","-f", "GeoJSON", "%s.json" % (name), filepath])
+            # srcDS = gdal.OpenEx(filepath)
+            # ds = gdal.VectorTranslate('output.json', srcDS, format='GeoJSON')
+
+            # get boundingbox from generated GeoJSON file
+            myGeojson = pygeoj.load(filepath="%s.json"%name)
+            click.echo(myGeojson.bbox)
             # delete generated GeoJSON file
             return (myGeojson.bbox, None)
         # errors
         except:
             return (None, "file not found or your gml/xml/kml data is not valid")
-
-#################################################################
-
-
-    # shapefile handelig
-    if file_extension == ".shp":
-        return shapefileCase(filepath)
-
-    # geojson handeling
-    elif file_extension in (".json" , ".geojson"):
-        return geojsonCase(filepath)
-
-    # GeoTiff handeling
-    elif file_extension in (".tif", ".tiff"):
-        return tiffCase(filepath)
-
-    # netCDF handeling
-    elif file_extension == ".nc":
-        return netCDFCase(filepath)
-
-    # geoPackage handeling
-    elif file_extension == ".gpkg":
-        return geopackageCase(filepath)
-
-    # csv or csv formated textfile handeling (csv on the web)
-    elif file_extension in (".csv", ".txt"):
-        return csvCase(filepath)
-
-    # gml handeling
-    elif file_extension in (".gml", ".xml", ".kml"):
-        return ISOCase(filepath)
+        finally:
+            try:
+                os.remove("%s.json"%name)
+            except:
+                pass
                 
     # if the extension has not been implemented yet or won't be supported
     else:
         return (None, "type %s not yet supported" % file_extension)
 
-#################################################################
+
 
 def CRSTransform(Lat, Long, refsys):
     # Coordinate Reference System (CRS)

@@ -59,6 +59,12 @@ class Csw2(object):
         self.parent = server_csw
         self.version = '2.0.2'
 
+    # Öffnen der Html page TAN
+    def extractmetadata(self):
+        print(os.getcwd())
+        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
+        return f.read()
+
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''
         serviceidentification = True
@@ -1295,9 +1301,6 @@ class Csw2(object):
             'Invalid id parameter')
         if 'outputschema' not in self.parent.kvp:
             self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
-
-        if self.parent.requesttype == 'GET':
-            self.parent.kvp['id'] = self.parent.kvp['id'].split(',')
 
         if ('outputformat' in self.parent.kvp and
             self.parent.kvp['outputformat'] not in
