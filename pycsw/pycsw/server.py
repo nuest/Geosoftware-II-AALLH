@@ -550,10 +550,6 @@ class Csw(object):
                 self.response = self.iface.getsimilarrecords()
             elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
                 self.response = self.iface.getsimilaritybbox()
-            elif self.kvp['request'] == 'OpenMap':
-                self.response = self.iface.openmap()
-            elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
-                self.response = self.iface.getsimilaritybbox()
             elif self.kvp['request'] == 'DescribeRecord':
                 self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
