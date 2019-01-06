@@ -1,6 +1,6 @@
 # Geosoftware II Project of the Group "A²HL²", WWU <!-- omit in toc -->
 
-**Members:** @atlanta11950, @Anika2, @HenFo, @cherry13579, @lukasjah
+[Aysel Tandik](https://github.com/atlanta11950), [Anika Graupner](https://github.com/Anika2), [Henry Fock](https://github.com/HenFo), [Lia Kirsch](https://github.com/cherry13579), [Lukas Jahnich](https://github.com/lukasjah)
 
 **Project order:** This project will close the gap between geospatial data formats and repositories respectively geospatial metadata catalogues and similarity measurements. Project groups will extend an existing Free and Open Source Software (FOSS) project with the functionality to retrieve and view similar records. This comprises both the API and UI, namely providing an HTTP endpoint to retrieve an ordered list of records based on a provided record and displaying/linking similar records in a detail view of a record respectively.
 
