@@ -44,25 +44,25 @@ def extractFromFolder(path, clear):
     output = []
     click.secho("\nResult:" , blink=True)
     for x in res:
-        if x[1][0] == None:
-            if x[2][0] == None:
+        if x[1][0] is None:
+            if x[2][0] is None:
                 output.append([x[0], x[1][1], x[2][1]])
             else:
                 output.append([x[0], x[1][1], x[2][0]])
         else:
-            if x[2][0] == None:
+            if x[2][0] is None:
                 output.append([x[0], x[1][0], x[2][1]])
             else:
                 output.append([x[0], x[1][0], x[2][0]])
 
-    click.echo(tabulate(output, headers=['Filename', 'Boundingbox (minX/Lon, minY/Lat, maxX, maxY) / Error', 'Timeextent (stard, end, Ø-interval in days) / Error']))
+    click.echo(tabulate(output, headers=['Filename', 'Boundingbox (minX/Lon, minY/Lat, maxX, maxY) / Error', 'Timeextent (stard, end, Average-interval in days) / Error']))
 
     # Create a geometry collection
     geomcol =  ogr.Geometry(ogr.wkbGeometryCollection)
     lowTime, maxTime = None, None 
 
     for x in res:
-        if x[1][1] == None:
+        if x[1][1] is None:
             box = ogr.Geometry(ogr.wkbLineString)
             box.AddPoint(x[1][0][0],x[1][0][1])
             box.AddPoint(x[1][0][0], x[1][0][3])
@@ -70,11 +70,11 @@ def extractFromFolder(path, clear):
             box.AddPoint(x[1][0][2], x[1][0][3])
             geomcol.AddGeometry(box)
         
-        if x[2][1] == None:
-            if lowTime == None or DateTime(x[2][0][0]) < lowTime:
+        if x[2][1] is None:
+            if lowTime is None or DateTime(x[2][0][0]) < lowTime:
                 lowTime = DateTime(x[2][0][0])
             
-            if maxTime == None or DateTime(x[2][0][1]) > maxTime:
+            if maxTime is None or DateTime(x[2][0][1]) > maxTime:
                 maxTime = DateTime(x[2][0][1])
     
     env = geomcol.GetEnvelope()
