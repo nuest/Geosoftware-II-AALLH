@@ -6,9 +6,9 @@
 
 ## Table of Contents <!-- omit in toc -->
 - [Instructions to start pycsw](#instructions-to-start-pycsw)
-	- [Test our additional features:](#test-our-additional-features)
+  - [Test our additional features:](#test-our-additional-features)
 - [Using the CLI-Tools](#using-the-cli-tools)
-	- [Examples](#examples)
+  - [Examples](#examples)
 
 ## Instructions to start pycsw
 
@@ -51,7 +51,12 @@ In your Browser, test our new requests by adding the following endpoints:
   
 ## Using the CLI-Tools
 
-If you have cloned our repository and installed Python, open the commandline and navigate to the CLI Tools folder in our project folder and type `python masterExtract.py --help` to show the options you can chose from.
+- clone Repository
+- install Python and pip
+- navigate in Folder `$ cd Geosoftware-II-AALLH`
+- run `pip install -r requirements.txt`
+
+Open the commandline and navigate to the CLI Tools folder in our project folder `cd CLI Tools` and type `python masterExtract.py --help` to show the options you can chose from.
 ```bat
 Options:
   --path TEXT  Path to Folder containing Geofiles
