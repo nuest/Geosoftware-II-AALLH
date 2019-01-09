@@ -12,7 +12,7 @@ import tempfile
 import getBoundingBox
 
 # add local modules folder
-file_path = '../Python_Modules'
+file_path = os.path.join('..', 'Python_Modules')
 sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
@@ -58,6 +58,10 @@ def getPolygon(name, path):
 #################################################################
 
     def shapefileCase(filepath):
+        """Method for extracting the convex hull of a shapefile
+        @param filepath Full path to shapefile
+        @returns a tuple where in first place is the convex hull as an array of point tuples
+        """
         try:
             myshp = open(filepath, "rb")
             sf = shapefile.Reader(shp=myshp)
@@ -73,6 +77,10 @@ def getPolygon(name, path):
             return (convex_hull(pointList), None)
 
     def jsonCase(filepath):
+        """Method for extracting the convex hull of a GeoJSON file
+        @param filepath Full path to GeoJSON file
+        @returns a tuple where in first place is the convex hull as an array of point tuples
+        """
         try:
             myGeojson = pygeoj.load(filepath=filepath)
             pointList = []
@@ -101,6 +109,10 @@ def getPolygon(name, path):
             return (None, "File Error!")
 
     def ncTiffCase(name, path):
+        """Method for extracting the convex hull of a netCDF file
+        @param filepath Full path to netCDF file
+        @returns a tuple where in first place is the convex hull as an array of point tuples
+        """
         bbox = getBoundingBox.getBoundingBox(name, path)
         if bbox[1] is None:
             return ([(bbox[0][0], bbox[0][1]), (bbox[0][0], bbox[0][3]), (bbox[0][2], bbox[0][3]), (bbox[0][2], bbox[0][1])], None)
@@ -108,7 +120,11 @@ def getPolygon(name, path):
             return bbox
 
     def geoPackageCase(filepath):
-        # @see https://stackoverflow.com/questions/35945437/python-gdal-projection-conversion-from-wgs84-to-nztm2000-is-not-correct
+        """Method for extracting the convex hull of a GeoPackage
+        @param filepath Full path to GeoPackage
+        @returns a tuple where in first place is the convex hull as an array of point tuples
+        @see https://stackoverflow.com/questions/35945437/python-gdal-projection-conversion-from-wgs84-to-nztm2000-is-not-correct
+        """
         try:
             conn = sqlite3.connect(filepath)
             c = conn.cursor()
@@ -146,7 +162,11 @@ def getPolygon(name, path):
                 pass
 
     def csvCase(filepath):
-        # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
+        """Method for extracting the convex hull of a CSV file
+        @param filepath Full path to CSV file
+        @returns a tuple where in first place is the convex hull as an array of point tuples
+        @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
+        """
         try: # finding the correct collums for latitude and longitude
             csvfile = open(filepath)
             head = csv.reader(csvfile, delimiter=' ', quotechar='|')
@@ -223,6 +243,10 @@ def getPolygon(name, path):
             return (convex_hull(pointList), None)
 
     def ISOCase(filepath):
+        """Method for extracting the convex hull of an ISO19xxx standardized file
+        @param filepath Full path to ISO19xxx standardized file
+        @returns a tuple where in first place is the convex hull as an array of point tuples
+        """
         try:
             # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
             # convert the gml file to a GeoJSON file

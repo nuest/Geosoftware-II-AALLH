@@ -18,7 +18,7 @@ def main(path, clear, time, space, hull):
 
     name = ""
     if time or space or hull:
-        name = click.prompt("Pleas enter filename")
+        name = click.prompt("Please enter filename")
 
     def timeOption(path, name):
         res = timeext.getTimeExtent(name, path)

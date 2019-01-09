@@ -11,7 +11,7 @@ import sqlite3
 import tempfile
 
 # add local modules folder
-file_path = '../Python_Modules'
+file_path = os.path.join('..', 'Python_Modules')
 sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr

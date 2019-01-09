@@ -42,7 +42,8 @@ def similarTitle(file1, file2):
             if i not in charList:
                 charList.append(i)
                 countList += filename1.count(i)
-
+        if len(file):
+            pass
         percent = countList*100/len(filename1)
         percent = math.floor(percent*100)/100
         return percent
