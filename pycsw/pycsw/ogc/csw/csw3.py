@@ -44,7 +44,6 @@ from pycsw.core import config, log, metadata, util
 from pycsw.core.formats.fmt_json import xml2dict
 from pycsw.ogc.fes import fes2
 import logging
-import sqlite3 # imported for connection on our own functions for the similarities functionalities
 
 LOGGER = logging.getLogger(__name__)
 
@@ -494,6 +493,8 @@ class Csw3(object):
     # @author: Anika Graupner
     def getsimilarrecords(self):
 
+        import sqlite3 # imported for connection on our own functions for the similarities functionalities
+
         print('getsimilarrecords is running in csw2')
 
         # first the connection is established to our database, to interact with the similarities table  
@@ -520,7 +521,7 @@ class Csw3(object):
         # # wrong outputformat in the request  
         if ('outputformat' in self.parent.kvp and
             self.parent.kvp['outputformat'] not in
-            self.parent.context.model['operations']['GetRecordById']['parameters']
+            self.parent.context.model['operations']['GetSimilarRecords']['parameters']
             ['outputFormat']['values']):
             return self.exceptionreport('InvalidParameterValue',
             'outputformat', 'Invalid outputformat parameter %s' %
@@ -683,6 +684,8 @@ class Csw3(object):
         # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
         # author: Aysel Tandik
         # connection to database 
+        import sqlite3 # imported for connection on our own functions for the similarities functionalities
+
         print('getsimilaritybbox is running in csw2')
         conn = sqlite3.connect('../../db-data/data.db')
         c = conn.cursor()
@@ -733,7 +736,7 @@ class Csw3(object):
         # # wrong outputformat in the request  
         if ('outputformat' in self.parent.kvp and
             self.parent.kvp['outputformat'] not in
-            self.parent.context.model['operations']['GetRecordById']['parameters']
+            self.parent.context.model['operations']['GetSimilarRecords']['parameters']
             ['outputFormat']['values']):
             return self.exceptionreport('InvalidParameterValue',
             'outputformat', 'Invalid outputformat parameter %s' %
@@ -1331,6 +1334,8 @@ class Csw3(object):
     def getrecordbyid(self, raw=False):
         ''' Handle GetRecordById request '''
 
+        print("getRecordbyid")
+
         if 'id' not in self.parent.kvp:
             return self.exceptionreport('MissingParameterValue', 'id',
             'Missing id parameter')
@@ -1367,6 +1372,8 @@ class Csw3(object):
             return self.exceptionreport('InvalidParameterValue',
             'outputformat', 'Invalid outputformat parameter %s' %
             self.parent.kvp['outputformat'])
+        
+        print("bis hier")
 
         if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
             self.parent.context.model['operations']['GetRecordById']['parameters']
@@ -1374,6 +1381,8 @@ class Csw3(object):
             return self.exceptionreport('InvalidParameterValue',
             'outputschema', 'Invalid outputschema parameter %s' %
             self.parent.kvp['outputschema'])
+        
+        print("bis da")
 
         if 'outputformat' in self.parent.kvp:
             self.parent.contenttype = self.parent.kvp['outputformat']
