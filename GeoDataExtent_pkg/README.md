@@ -1,13 +1,19 @@
+- [Use as CLI-Tool](#use-as-cli-tool)
+  - [Install](#install)
+  - [Usage](#usage)
+    - [Examples](#examples)
+- [Use as module](#use-as-module)
+
 # Use as CLI-Tool
 
 ## Install
 
-```shell
+```bat
 pip install geodataExtent
 ```
 ## Usage
 
-```shell
+```bat
 extract-extent --help
 ```
 gives:
@@ -51,7 +57,7 @@ The spatial extent is shown as a boundingbox. `[minX/minLong, minY/minLat, maxX/
 
 For more percission the `-h / --hull` flag gives you the spatial exnent as a convex hull. That means from all the points of a dataset the outer most points are beeing calculated and returned in correct order.
 
-#### Folderextraction
+#### Folderextraction <!-- omit in toc -->
 
 If you want to extract your hole folder, the `-c / --clear` flag is recommended because a long list of processing outputs is generated before the final output appears.
 ```

@@ -8,6 +8,8 @@
 - [Instructions to start pycsw](#instructions-to-start-pycsw)
   - [Test our additional features:](#test-our-additional-features)
 - [Using the CLI-Tools](#using-the-cli-tools)
+    - [Option 1](#option-1)
+    - [Option 2](#option-2)
   - [Examples](#examples)
 
 ## Instructions to start pycsw
@@ -21,7 +23,7 @@
 cd .../pycsw
 ```
 
-- add the following in PowerShell (just completely copy and paste):
+- add the following in PowerShell (just completely copy and paste)
 
 ```docker
 docker run --name pycsw-dev --volume ${PWD}/pycsw:/usr/lib/python3.5/site-packages/pycsw --volume ${PWD}/docs:/home/pycsw/docs --volume ${PWD}/VERSION.txt:/home/pycsw/VERSION.txt --volume ${PWD}/LICENSE.txt:/home/pycsw/LICENSE.txt --volume ${PWD}/COMMITTERS.txt:/home/pycsw/COMMITTERS.txt --volume ${PWD}/CONTRIBUTING.rst:/home/pycsw/CONTRIBUTING.rst --volume ${PWD}/pycsw/plugins:/home/pycsw/pycsw/plugins --volume ${PWD}/our.cfg:/etc/pycsw/pycsw.cfg --volume ${PWD}/db-data:/db-data/ --publish 8000:8000 geopython/pycsw --reload
@@ -31,7 +33,7 @@ docker run --name pycsw-dev --volume ${PWD}/pycsw:/usr/lib/python3.5/site-packag
 - go to localhost:8000 in your browser, when you see a xml tree, everething went fine
 - to remove the container, add the following in powerShell (necessary if the container should be restarted with the above command):
 
-```docker
+```shell
 docker rm -f pycsw-dev
 ```
 
@@ -51,12 +53,25 @@ In your Browser, test our new requests by adding the following endpoints:
   
 ## Using the CLI-Tools
 
+#### Option 1
+
 - clone Repository
 - install Python and pip
 - navigate in Folder `$ cd Geosoftware-II-AALLH`
-- run `pip install -r requirements.txt`
+- run `$ pip install -r requirements.txt`
+- if [GDAL](https://www.gdal.org/) won't install with pip, try a different Method
+  - in my case (Windows) it worked using gdal from [this site](http://www.xavierdupre.fr/enseignement/setup/index_modules_list.html)
+  - `$ pip install <path to .whl>`
 
-Open the commandline and navigate to the CLI Tools folder in our project folder `cd CLI Tools` and type `python masterExtract.py --help` to show the options you can chose from.
+ Open the commandline and navigate to the CLI Tools folder in our project folder `$ cd CLI Tools` and type `$ python masterExtract.py --help` to show the options you can chose from.
+
+#### Option 2
+If pip is installed:
+- `$ pip install geodataExtent`
+- If GDAL won't install, try method above
+
+type `$ extract-extent --help`
+
 ```bat
 Options:
   --path TEXT  Path to Folder containing Geofiles
@@ -75,7 +90,7 @@ If you do not use `--path`, the path will be prompted. That means it is a shortc
 ### Examples
 
 ```
-$ python masterExtract.py -t -s -h
+$ python masterExtract.py -t -s -h  'OR' extract-extent -t -s -h
 Pleas enter path to Folder: <path>
 Pleas enter filename: <filename>
 
@@ -102,6 +117,7 @@ For more percission the `-h / --hull` flag gives you the spatial exnent as a con
 If you want to extract your hole folder, the `-c / --clear` flag is recommended because a long list of processing outputs is generated before the final output appears.
 ```
 $ python masterExtract.py -c --path "<folder path>"
+$ extract-extent -c --path "<folder path>"
 ```
 
 
