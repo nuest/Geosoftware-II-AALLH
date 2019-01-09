@@ -16,3 +16,5 @@ CLI Tools/__pycache__/
 CLI Tools/getAllMetadata\.py
 
 CLI Tools/output\.json
+
+\.DS_Store
