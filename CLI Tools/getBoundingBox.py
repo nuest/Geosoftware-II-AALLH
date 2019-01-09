@@ -27,8 +27,8 @@ import ogr2ogr
 # asking for parameters in command line
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
-@click.option('--name', prompt="File name", help="File name with extension")
-@click.option('--clear', default=False, help='Argument wether you want to display only the Output \nOptions: 1, yes, y and true')
+@click.option('--name', prompt="File name", help="Filename with extension")
+@click.option('--clear','-c', default=False, is_flag=True, help='Clear screen before showing results')
 def main(path, name, clear):
     res = getBoundingBox(name, path)
     if clear:

@@ -8,12 +8,22 @@ import getTimeExtent as timeext
 
 # asking for parameters in command line
 @click.command()
-@click.option('--path', prompt="Pleas enter path to Folder", help='Path to Folder containing Geofiles')
+@click.option('--path', prompt="Please enter path to Folder", help='Path to Folder containing Geofiles')
 @click.option('--clear','-c', default=False, is_flag=True, help='Clear screen before showing results')
 @click.option('--time', '-t', default=False, is_flag=True, help="execute time extraction for one file")
 @click.option('--space', '-s', default=False, is_flag=True, help="execute boundingbox extraction for one file")
 @click.option('--hull', '-h', default=False, is_flag=True, help="execute convex-hull extraction for one file")
 def main(path, clear, time, space, hull):
+    """Main CLI-Tool combining all the single extraction tools in one tool.
+    @param path     Text/Path: Path to the folder with Geodata
+    @param clear    Boolean: Whether to clear the screen before showing the result or not
+    @param time     Boolean: If true, time extraction will be triggered
+    @param space    Boolean: If true, spatial extraction will be triggered
+    @param hull     Boolean: If true, a convex hull will be calculated
+
+    No return but Console-Output of the wanted extents. If time, space and hull are all false, the folder extraction will be triggered and returns a table with the boundingbox and spatial extent for each individual file in addition to the full time and spatial extent of he folder.
+    Issue: If there are files that are not in WGS84 and do not have a specified referencesystem, the spatial extent of the folder will might not be in WGS84
+    """
     output = []
 
     name = ""
