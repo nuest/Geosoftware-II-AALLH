@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="geodataExtent",
-    version="0.1.5",
+    version="0.1.7",
     author="A^sHL^2",
     author_email="h_fock01@uni-muenster.de",
     description="Package for extracting the time and spatial extent of Geodata",
