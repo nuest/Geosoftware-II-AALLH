@@ -9,7 +9,7 @@ import sys
 import json
 import sqlite3
 import tempfile
-import getBoundingBox
+from geodataExtent import getBoundingBox
 
 # add local modules folder
 file_path = os.path.join('..', 'Python_Modules')
