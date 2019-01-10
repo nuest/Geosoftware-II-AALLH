@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap', 'GetSimilarityBBox'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'GetSimilarityBBox'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -276,14 +276,6 @@ class StaticContext(object):
                         },
                         'parameters': {
                         }
-                    },
-                    'OpenMap': {
-                        'methods': {
-                            'get': True,
-                            'post': False,
-                        },
-                        'parameters': {
-                        }
                     }
                 },
                 'parameters': {
@@ -359,7 +351,7 @@ class StaticContext(object):
             'csw30': {
                 'operations_order': [
                     'GetCapabilities', 'GetDomain', 'GetRecords',
-                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap', 'GetSimilarityBBox'
+                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'GetSimilarityBBox'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -439,14 +431,6 @@ class StaticContext(object):
                         }
                     },
                     'GetSimilarityBBox': {
-                        'methods': {
-                            'get': True,
-                            'post': False,
-                        },
-                        'parameters': {
-                        }
-                    },
-                    'OpenMap': {
                         'methods': {
                             'get': True,
                             'post': False,

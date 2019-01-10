@@ -32,20 +32,21 @@ def similarTitle(file1, file2):
             if i not in charList:
                 charList.append(i)
                 countList += filename1.count(i)
-
-        percent = countList*100/len(filename1)
-        percent = math.floor(percent*100)/100
+        percent = 0
+        if len(filename1) != 0:
+            percent = countList*100/len(filename1)
+            percent = math.floor(percent*100)/100
         return percent
     else:
         charList = []
         for i in filename1:
             if i not in charList:
                 charList.append(i)
-                countList += filename1.count(i)
-
-        percent = countList*100/len(filename1)
-        percent = math.floor(percent*100)/100
+                countList += filename2.count(i)
+        percent = 0
+        if len(filename2) != 0:
+            percent = countList*100/len(filename2)
+            percent = math.floor(percent*100)/100
         return percent
 
 print(similarTitle("FeatureCollection.json","geoTiffTest.tif"))
-

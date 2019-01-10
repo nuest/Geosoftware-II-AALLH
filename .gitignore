@@ -18,3 +18,5 @@ CLI Tools/getAllMetadata\.py
 CLI Tools/output\.json
 
 \.DS_Store
+
+readme pycsw\.md

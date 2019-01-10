@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="geodataExtent",
-    version="0.1.3",
+    version="0.1.7",
     author="A^sHL^2",
     author_email="h_fock01@uni-muenster.de",
     description="Package for extracting the time and spatial extent of Geodata",
@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/HenFo/Geosoftware-II-AALLH/tree/master/CLI%20Tools",
     packages=setuptools.find_packages(),
     classifiers=[
-        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
@@ -28,5 +28,8 @@ setuptools.setup(
         "xarray >= 0.11.0",
         "DateTime >= 4.3",
         "tabulate >= 0.8.2",
-    ]
+    ],
+    entry_points = {
+        'console_scripts': ['extract-extent=geodataExtent.masterExtract:main'],
+    }
 )
