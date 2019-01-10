@@ -14,3 +14,7 @@ CLI Tools/__pycache__/
 *.code-workspace
 
 CLI Tools/getAllMetadata\.py
+
+CLI Tools/output\.json
+
+\.DS_Store

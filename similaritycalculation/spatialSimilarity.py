@@ -3,7 +3,7 @@ import sys
 from math import *
 
 # add local modules folder
-file_path = '../Python_Modules'
+file_path = os.path.join('..', 'Python_Modules')
 sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
@@ -50,26 +50,18 @@ def similarArea(bboxA, bboxB):
     boxA = _generateGeometryFromBbox(bboxA)
     boxB = _generateGeometryFromBbox(bboxB)
 
-    # print(boxA)
-
     areaA = boxA.GetArea()
     areaB = boxB.GetArea()
 
-    # print(areaA)
-    # print(areaB)
-
     reachedPercentArea = 0
-    try:
+
+    if areaA == areaB:
+        reachedPercentArea = 100
+    else:
         if areaA >= areaB:
             reachedPercentArea = areaB*100/areaA
         else:
             reachedPercentArea = areaA*100/areaB
-    except ZeroDivisionError: # if both are points
-        reachedPercentArea = 100
-    finally:
-        reachedPercentArea = floor(reachedPercentArea*100)/100
-    # print(reachedPercentArea)
-
 
     return reachedPercentArea
 
@@ -78,7 +70,7 @@ def spatialDistance(bboxA, bboxB):
     distBetweenCenterPoints = None
     longerDistance = None
     if (bboxA[0] == bboxA[2]) and (bboxB[0] == bboxB[2]) and (bboxA[1] == bboxA[3]) and (bboxB[1] == bboxB[3]):
-        distBetweenCenterPoints = _getDistance((bboxA[0], bboxA[1]),(bboxB[0], bboxB[1]))
+        distBetweenCenterPoints = _getDistance((bboxA[0], bboxA[1]), (bboxB[0], bboxB[1]))
         longerDistance = 5
 
     else:
@@ -293,4 +285,3 @@ bbox2 = [-96.800194,32.760085,-96.796353,32.761385]
 print(spatialDistance(bbox1, bbox2))
 print(spatialOverlap(bbox1, bbox2))
 print(similarArea(bbox1, bbox2))
-

@@ -174,7 +174,7 @@ class StaticContext(object):
             'csw': {
                 'operations_order': [
                     'GetCapabilities', 'DescribeRecord', 'GetDomain',
-                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap', 'GetSimilarityBBox'
+                    'GetRecords', 'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'GetSimilarityBBox'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -267,6 +267,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     },
                     'GetSimilarityBBox': {
@@ -275,14 +281,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
-                        }
-                    },
-                    'OpenMap': {
-                        'methods': {
-                            'get': True,
-                            'post': True,
-                        },
-                        'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     }
                 },
@@ -359,7 +363,7 @@ class StaticContext(object):
             'csw30': {
                 'operations_order': [
                     'GetCapabilities', 'GetDomain', 'GetRecords',
-                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'OpenMap', 'GetSimilarityBBox'
+                    'GetRecordById', 'GetRepositoryItem', 'GetSimilarRecords', 'GetSimilarityBBox'
                 ],
                 'operations': {
                     'GetCapabilities': {
@@ -436,6 +440,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     },
                     'GetSimilarityBBox': {
@@ -444,14 +454,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
-                        }
-                    },
-                    'OpenMap': {
-                        'methods': {
-                            'get': True,
-                            'post': True,
-                        },
-                        'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     }
                 },

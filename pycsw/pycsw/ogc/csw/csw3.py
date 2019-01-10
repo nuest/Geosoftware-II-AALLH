@@ -485,6 +485,300 @@ class Csw3(object):
                              fes2.MODEL['Functions'][fnop]['returns']
 
         return node
+    
+    # handle GetSimilarRecords Request
+    # function, which gets an id as input and returns a list of similar records
+    # could also get a parameter "similar" as input to to specify the number of records output 
+    # some parts were taken over from the GetRecordById function 
+    # @author: Anika Graupner
+    def getsimilarrecords(self):
+
+        import sqlite3 # imported for connection on our own functions for the similarities functionalities
+
+        print('getsimilarrecords is running in csw2')
+
+        # first the connection is established to our database, to interact with the similarities table  
+        # source: https://docs.python.org/3/library/sqlite3.html
+        # @author: Aysel Tandik
+        conn = sqlite3.connect('../../db-data/data.db') # path to the database in the docker container 
+        print(conn)
+        c = conn.cursor()
+ 
+        # missing id paramter in the request, so there is no "&id="
+        if 'id' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'id',
+            'Missing id parameter')
+
+        # when there is no value behind the id paramter, only "&id="
+        if len(self.parent.kvp['id']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'id',
+            'Invalid id parameter')
+
+        # multiple ids will be seperated by commas 
+        if self.parent.requesttype == 'GET':
+            self.parent.kvp['id'] = self.parent.kvp['id'].split(',')
+        
+        # # wrong outputformat in the request  
+        if ('outputformat' in self.parent.kvp and
+            self.parent.kvp['outputformat'] not in
+            self.parent.context.model['operations']['GetSimilarRecords']['parameters']
+            ['outputFormat']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputformat', 'Invalid outputformat parameter %s' %
+            self.parent.kvp['outputformat'])
+
+        # in the following, the output for the response is build with python  xml.etree.ElementTree as usual in pycsw
+        # in the server.py the xml is changed to json with the pycsw xml2json function 
+
+        # parent node 
+        node = etree.Element('GetSimilarRecordsResponse')
+
+        print(self.parent.kvp['id'])
+            
+        # if the paramter "similar" is not used 
+        if 'similar' not in self.parent.kvp:
+
+            k = 0
+
+            # for every id value of the id parameter 
+            while k < len(self.parent.kvp['id']):
+
+                # variable for the current id 
+                requestID = self.parent.kvp['id'][k]
+
+                # important for the sql request 
+                requestID = '"' + requestID + '"'
+
+                print(requestID)
+
+                # sql request to the similarities table 
+                # searching for the ids and the value of the similarity for the current id 
+                # the values are ordered in descending order
+                # we set the maximum value to 20 similar records (when no similar parameter is given in the request), but only records with a similarity value of at least 51 are displayed
+                c.execute('SELECT record1, total_similarity FROM similarities WHERE record2 = '+ requestID +' AND total_similarity >= 51 UNION SELECT record2, total_similarity FROM similarities WHERE record1 = '+ requestID +' AND total_similarity >= 50 ORDER BY total_similarity DESC LIMIT 20')
+            
+                # get the result of the request 
+                values = c.fetchall()
+
+                print(values)
+
+                # response if there are no similar records for the given id (can happen if the values are always below 51)
+                if not values:
+                    resultForInputRecord = etree.SubElement(node, 'resultsForInputRecords')
+                    resultForInputRecord.set('inputId', str(self.parent.kvp['id'][k]))
+                    listOfSimilarRecords = etree.SubElement(resultForInputRecord, 'listOfSimilarRecords')
+                    listOfSimilarRecords.set('info', 'No similar records or invalid id.')
+                
+                # but if
+                else:
+
+                    resultForInputRecord = etree.SubElement(node, 'resultsForInputRecords')
+                    resultForInputRecord.set('inputId', str(self.parent.kvp['id'][k]))
+                    listOfSimilarRecords = etree.SubElement(resultForInputRecord, 'listOfSimilarRecords')
+
+                    # mainly formatting
+                    i = 0
+                    while i < len(values):
+                        print(values[i])
+                        value = str(values[i])
+                        value = value.replace('(', '').replace(')', '')
+                        print(value)
+                        identifier, similarityValue = value.split(",")
+                        identifier = identifier.replace("'", '')
+                        print(identifier)
+                        similarityValue = similarityValue.replace(' ', '')
+                        print(similarityValue)
+
+                        rec = etree.SubElement(listOfSimilarRecords, 'record')
+                        etree.SubElement(rec, 'identifier').text = identifier
+                        etree.SubElement(rec, 'similarityValue').text = similarityValue
+        
+                        i += 1
+
+                k +=1
+
+            return node
+
+        # when a similar parameter is given in the request
+        else:
+
+            # when there is no value behind the similar paramter, only "&similar="
+            if len(self.parent.kvp['similar']) < 1:
+                return self.exceptionreport('InvalidParameterValue', 'similar',
+                'Invalid similar parameter')
+            
+            # when there are more than one value behind the similar paramter
+            if len(self.parent.kvp['similar']) > 1:
+                return self.exceptionreport('InvalidParameterValue', 'similar',
+                'Invalid similar parameter. May only have one value.') 
+
+            # get the value of the similar parameter from the request 
+            requestSimilar = self.parent.kvp['similar'][0]
+
+            k = 0
+
+            # for every id value of the id parameter 
+            while k < len(self.parent.kvp['id']):
+
+                # variable for the current id 
+                requestID = self.parent.kvp['id'][k]
+
+                # important for the sql request
+                requestID = '"' + requestID + '"'
+
+                # sql request to the similarities table 
+                # searching for the ids and the value of the similarity for the current id 
+                # the values are ordered in descending order
+                # the number of the records in the list of the respoinse depends on the similar parameter
+                c.execute('SELECT record1, total_similarity FROM similarities WHERE record2 = '+ str(requestID) +' AND total_similarity >= 51 UNION SELECT record2, total_similarity FROM similarities WHERE record1 = '+ str(requestID) +' AND total_similarity >= 50 ORDER BY total_similarity DESC LIMIT '+ requestSimilar +'')
+            
+                # get the result of the request 
+                values = c.fetchall()
+
+                print(values)
+
+                # response if there are no similar records for the given id (can happen if the values are always below 51)
+                if not values:
+                    resultForInputRecord = etree.SubElement(node, 'resultsForInputRecords')
+                    resultForInputRecord.set('inputId', str(self.parent.kvp['id'][k]))
+                    listOfSimilarRecords = etree.SubElement(resultForInputRecord, 'listOfSimilarRecords')
+                    listOfSimilarRecords.set('info', 'No similar records or invalid id.')
+                
+                # but if
+                else:
+
+                    resultForInputRecord = etree.SubElement(node, 'resultsForInputRecords')
+                    resultForInputRecord.set('inputId', str(self.parent.kvp['id'][k]))
+                    listOfSimilarRecords = etree.SubElement(resultForInputRecord, 'listOfSimilarRecords')
+
+                    i = 0
+
+                    # mainly formatting 
+                    while i < len(values):
+                        print(values[i])
+                        value = str(values[i])
+                        value = value.replace('(', '').replace(')', '')
+                        print(value)
+                        identifier, similarityValue = value.split(",")
+                        identifier = identifier.replace("'", '')
+                        print(identifier)
+                        similarityValue = similarityValue.replace(' ', '')
+                        print(similarityValue)
+
+                        rec = etree.SubElement(listOfSimilarRecords, 'record')
+                        etree.SubElement(rec, 'identifier').text = identifier
+                        etree.SubElement(rec, 'similarityValue').text = similarityValue
+        
+                        i += 1
+
+                k +=1
+
+            return node
+    
+    # handle GetSimilarBBox Request
+    # function, which gets two ids as input and returns the similarity value of the boundingbox for the two input records 
+    # some parts were taken over from the GetRecordById function 
+    # @author: Aysel Tandik, Anika Graupner
+    def getsimilaritybbox(self, raw=False):
+
+        # 05.12.18, source: https://docs.python.org/3/library/sqlite3.html
+        # author: Aysel Tandik
+        # connection to database 
+        import sqlite3 # imported for connection on our own functions for the similarities functionalities
+
+        print('getsimilaritybbox is running in csw2')
+        conn = sqlite3.connect('../../db-data/data.db')
+        c = conn.cursor()
+
+        print(c.fetchone())
+
+        # missing idone paramter in the request, so there is no "&idone="
+        if 'idone' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'idone',
+            'Missing idone parameter')
+        
+        # missing idtwo paramter in the request, so there is no "&idtwo=" 
+        if 'idtwo' not in self.parent.kvp:
+            return self.exceptionreport('MissingParameterValue', 'idtwo',
+            'Missing idtwo parameter')
+
+        # split with comma
+        if self.parent.requesttype == 'GET':
+           self.parent.kvp['idone'] = self.parent.kvp['idone'].split(',')
+        
+        if self.parent.requesttype == 'GET':
+           self.parent.kvp['idtwo'] = self.parent.kvp['idtwo'].split(',')
+
+        # when there is no value behind the idone paramter, only "&idone="
+        if len(self.parent.kvp['idone']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'idone',
+            'Invalid idone parameter')
+        
+        # when there is more than one value behind the idone paramter (first .split(,))
+        if len(self.parent.kvp['idone']) > 1:
+            return self.exceptionreport('InvalidParameterValue', 'idone',
+            'Invalid idone parameter. May have only one value.')
+        
+        # when there is no value behind the idtwo paramter, only "&idtwo=" ((first .split(,))
+        if len(self.parent.kvp['idtwo']) < 1:
+            return self.exceptionreport('InvalidParameterValue', 'idtwo',
+            'Invalid idtwo parameter')
+        
+        # when there is more than one value behind the idtwo paramter
+        if len(self.parent.kvp['idtwo']) > 1:
+            return self.exceptionreport('InvalidParameterValue', 'idtwo',
+            'Invalid idtwo parameter. May have only one value.')
+
+        # no outputschema
+        if 'outputschema' not in self.parent.kvp:
+            self.parent.kvp['outputschema'] = self.parent.context.namespaces['csw']
+        
+        # # wrong outputformat in the request  
+        if ('outputformat' in self.parent.kvp and
+            self.parent.kvp['outputformat'] not in
+            self.parent.context.model['operations']['GetSimilarRecords']['parameters']
+            ['outputFormat']['values']):
+            return self.exceptionreport('InvalidParameterValue',
+            'outputformat', 'Invalid outputformat parameter %s' %
+            self.parent.kvp['outputformat'])
+    
+        # parent node
+        node = etree.Element('GetSimilarityBBoxResponse')
+
+        # get the id values from the request 
+        id1 = self.parent.kvp['idone'][0]
+        id2 = self.parent.kvp['idtwo'][0]
+
+        # important for the sql request
+        id1 = '"' + id1 + '"'
+        id2 = '"' + id2 + '"'
+
+        print(id1)
+        print(id2)
+        
+        # sql request to the similarities table 
+        # searching for the value of the similarity of the boundingbox of the two input ids
+        c.execute('SELECT bbox FROM similarities WHERE record1 = '+ id1 +' and record2 = '+ id2 +'')
+    
+        # get the request result 
+        values = c.fetchall()
+
+        print(values)
+
+        # get the value out of the list (0 because it can only be one value)
+        value = str(values[0])
+        print(value)
+
+        # mainly formatting 
+        value = value.replace('(', '').replace(')', '')
+        value = value.replace(',', '')
+        print(value)
+
+        # add the value of the bbox to the response 
+        etree.SubElement(node, 'similarityValueOfTheBBox').text = value
+    
+        return node
+
 
     def getdomain(self):
         ''' Handle GetDomain request '''
@@ -1040,6 +1334,8 @@ class Csw3(object):
     def getrecordbyid(self, raw=False):
         ''' Handle GetRecordById request '''
 
+        print("getRecordbyid")
+
         if 'id' not in self.parent.kvp:
             return self.exceptionreport('MissingParameterValue', 'id',
             'Missing id parameter')
@@ -1076,6 +1372,8 @@ class Csw3(object):
             return self.exceptionreport('InvalidParameterValue',
             'outputformat', 'Invalid outputformat parameter %s' %
             self.parent.kvp['outputformat'])
+        
+        print("bis hier")
 
         if ('outputschema' in self.parent.kvp and self.parent.kvp['outputschema'] not in
             self.parent.context.model['operations']['GetRecordById']['parameters']
@@ -1083,6 +1381,8 @@ class Csw3(object):
             return self.exceptionreport('InvalidParameterValue',
             'outputschema', 'Invalid outputschema parameter %s' %
             self.parent.kvp['outputschema'])
+        
+        print("bis da")
 
         if 'outputformat' in self.parent.kvp:
             self.parent.contenttype = self.parent.kvp['outputformat']

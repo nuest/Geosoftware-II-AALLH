@@ -30,12 +30,10 @@ def timeLength(timeA, timeB):
         if lengthA > lengthB:
             lengthPercentage = lengthB/lengthA
             lengthPercentage = floor(lengthPercentage/100)*100
-            print(lengthPercentage)
             return lengthPercentage
         else:
             lengthPercentage = lengthA/lengthB
             lengthPercentage = floor(lengthPercentage/100)*100
-            print(lengthPercentage)
             return lengthPercentage
 
 def timeOverlap(timeA, timeB):
@@ -70,12 +68,10 @@ def timeOverlap(timeA, timeB):
     if timeLengthA > timeLengthB:
         overlapPercentage = overlap/timeLengthA
         overlapPercentage = floor(overlapPercentage*100)/100
-        print(overlapPercentage)
         return overlapPercentage
     else:
         overlapPercentage = overlap/timeLengthB
         overlapPercentage = floor(overlapPercentage*100)/100
-        print(overlapPercentage)
         return overlapPercentage
 
 def similarInterval(timeA, timeB):
@@ -85,37 +81,12 @@ def similarInterval(timeA, timeB):
         if timeA[2] > timeB[2]:
             intervalPercentage = timeB[2]/timeA[2]
             intervalPercentage = floor(intervalPercentage*100)/100
-            print(intervalPercentage)
             return intervalPercentage
         else:
             intervalPercentage = timeA[2]/timeB[2]
             intervalPercentage = floor(intervalPercentage*100)/100
-            print(intervalPercentage)
             return intervalPercentage
 
-# timeOverlap(['1935/01/01 00:00:00 GMT+0', '2014/01/01 00:00:00 GMT+0', 365.253164556962], ['2018/03/28 12:43:14.034000 GMT+0', '2018/03/28 12:43:14.034000 GMT+0', 0])
+print(timeOverlap(['1935/01/01 00:00:00 GMT+0', '2014/01/01 00:00:00 GMT+0', 365.253164556962], ['2013/01/01 00:00:00 GMT+0', '2018/03/28 12:43:14.034000 GMT+0', 0]))
 
-print(DateTime('1935/01/01 00:00:10 GMT+0') - DateTime('1935/01/01 00:00:00 GMT+0'))
-
-#################################################################################################
-# Geometry
-print("\n Time \n")
-timeA = ['1956/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 730.5]
-timeB = ['2015/12/04 15:28:59.122000 GMT+0', '2015/12/04 15:28:59.122000 GMT+0', 0]
-print(timeLength(timeA, timeB))
-print(timeOverlap(timeA, timeB))
-print(similarInterval(timeA, timeB))
-
-print("\n Time 2 \n")
-timeA = ['1956/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 730.5]
-timeB = ['1935/01/01 00:00:00 GMT+0', '2014/01/01 00:00:00 GMT+0', 365.253164556962]
-print(timeLength(timeA, timeB))
-print(timeOverlap(timeA, timeB))
-print(similarInterval(timeA, timeB))
-
-print("\n Time 3 \n")
-timeA = ['2018/03/28 12:43:14.034000 GMT+0', '2018/03/28 12:43:14.034000 GMT+0', 0]
-timeB = ['2018/03/28 12:43:14.034000 GMT+0', '2018/03/28 12:43:14.034000 GMT+0', 0]
-print(timeLength(timeA, timeB))
-print(timeOverlap(timeA, timeB))
-print(similarInterval(timeA, timeB))
+# print(DateTime('1935/01/01 00:00:10 GMT+0') - DateTime('1935/01/01 00:00:00 GMT+0'))
