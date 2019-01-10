@@ -1530,19 +1530,6 @@ class Csw2(object):
             # show insert result identifiers
             node.append(self._write_verboseresponse(insertresults))
         
-        # import the similaritycalculation
-        # @author: Anika Graupner 
-        from pycsw.similaritycalc import simicalc
-
-        # get the id of the record which was sendet to the server from the cli tool to start the similarity calculation 
-        print(ttype['constraint']['values'])
-        values = ttype['constraint']['values']
-        values = values[0]
-        print(values)
-
-        # start the calculation
-        simicalc.simicalc(values)
-        
         return node
 
     def harvest(self):
