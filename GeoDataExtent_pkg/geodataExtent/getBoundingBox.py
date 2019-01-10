@@ -188,10 +188,14 @@ def getBoundingBox(name, path):
             bboxes = []
 
             if row is None:
-                assert LookupError("No valid data detected (EPSG:4327 not supported)")
+                raise LookupError("No valid data detected (EPSG:4327 not supported)")
 
             for line in row:
-                bboxes.append([line[0], line[1], line[2], line[3], line[4]])
+                if not any(x is None for x in line):
+                    bboxes.append([line[0], line[1], line[2], line[3], line[4]])
+            
+            if bboxes == []:
+                raise LookupError("No valid data detected! Coordinates in gpkg_contents are invalid")
             
             wgs84bboxen = []
             for bbox in bboxes:

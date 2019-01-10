@@ -1,21 +1,27 @@
 Metadata-Version: 2.1
 Name: geodataExtent
-Version: 0.1.7
+Version: 0.1.8
 Summary: Package for extracting the time and spatial extent of Geodata
 Home-page: https://github.com/HenFo/Geosoftware-II-AALLH/tree/master/CLI%20Tools
 Author: A^sHL^2
 Author-email: h_fock01@uni-muenster.de
 License: UNKNOWN
-Description: # Use as CLI-Tool
+Description: - [Use as CLI-Tool](#use-as-cli-tool)
+          - [Install](#install)
+          - [Usage](#usage)
+            - [Examples](#examples)
+        - [Use as module](#use-as-module)
+        
+        # Use as CLI-Tool
         
         ## Install
         
-        ```shell
+        ```bat
         pip install geodataExtent
         ```
         ## Usage
         
-        ```shell
+        ```bat
         extract-extent --help
         ```
         gives:
@@ -59,7 +65,7 @@ Description: # Use as CLI-Tool
         
         For more percission the `-h / --hull` flag gives you the spatial exnent as a convex hull. That means from all the points of a dataset the outer most points are beeing calculated and returned in correct order.
         
-        #### Folderextraction
+        #### Folderextraction <!-- omit in toc -->
         
         If you want to extract your hole folder, the `-c / --clear` flag is recommended because a long list of processing outputs is generated before the final output appears.
         ```
