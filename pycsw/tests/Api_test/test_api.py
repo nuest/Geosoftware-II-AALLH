@@ -46,6 +46,9 @@ class TestApi():
        r.raise_for_status()
        responseTime = str(round(r.elapsed.total_seconds(),2))
        assert responseTime < '200'
+
+    def test_failedUrl(self):
+        
 	   
 	   
 	   
