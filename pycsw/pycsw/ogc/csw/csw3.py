@@ -500,7 +500,7 @@ class Csw3(object):
         # first the connection is established to our database, to interact with the similarities table  
         # source: https://docs.python.org/3/library/sqlite3.html
         # @author: Aysel Tandik
-        conn = sqlite3.connect('../../db-data/data.db') # path to the database in the docker container 
+        conn = sqlite3.connect(os.path.join('..', '..', 'db-data', 'data.db')) # path to the database in the docker container 
         print(conn)
         c = conn.cursor()
  
@@ -687,7 +687,7 @@ class Csw3(object):
         import sqlite3 # imported for connection on our own functions for the similarities functionalities
 
         print('getsimilaritybbox is running in csw2')
-        conn = sqlite3.connect('../../db-data/data.db')
+        conn = sqlite3.connect(os.path.join('..', '..', 'db-data', 'data.db'))
         c = conn.cursor()
 
         print(c.fetchone())
