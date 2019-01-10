@@ -59,12 +59,6 @@ class Csw2(object):
         self.parent = server_csw
         self.version = '2.0.2'
 
-    # Öffnen der Html page TAN
-    def extractmetadata(self):
-        print(os.getcwd())
-        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
-        return f.read()
-
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''
         serviceidentification = True

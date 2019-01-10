@@ -49,6 +49,7 @@ from pycsw.plugins.profiles import profile as pprofile
 import pycsw.plugins.outputschemas
 from pycsw.core import config, log, util
 from pycsw.ogc.csw import csw2, csw3
+from os.path import abspath, exists
 
 LOGGER = logging.getLogger(__name__)
 
