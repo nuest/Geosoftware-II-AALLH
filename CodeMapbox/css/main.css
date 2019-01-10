@@ -1,0 +1,44 @@
+body,html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: rgb(2, 27, 44);
+}
+
+body{
+    background-image: url("../Projekt.png");
+    background-repeat: no-repeat;
+    background-position: right;
+    background-size: 8%;
+    background-position-x: 95%;
+    background-position-y: 0%;
+
+    
+}
+
+#map {
+    height: 680px;
+    margin: 10px;
+    border-radius: 5px;
+}
+
+#controls {
+    position: absolute;
+    top: 2em;
+    left: 10%;
+    width: 90%;
+    z-index: 2;
+}
+
+#rangeSlider {
+    width: 60%;
+}
+
+#dateString {
+    color: white;
+    font-size: 30px;
+}
+
+h1{text-align :center; color: antiquewhite;}
+
+h3{text-align: center;color: antiquewhite;}

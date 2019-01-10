@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+             <title>Temperatur in Münster</title>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
+
+    <link href="css/main.css" rel="stylesheet">
+    <link rel="icon" 
+      type="image/png" 
+      href="Projekt.png">
+</head>
+<body>
+   
+    
+    <h1>Find your similar record!</h1> 
+    <h3>Please locate yourselve or click on the map where you want to find records!</h3>
+            
+    <div id="map">
+        <div id="controls">
+            <input id="rangeSlider" type="range" min="0" max="0" step="360000" value="0" oninput="changeData(this.value)">
+            
+            <button onclick="getData()">Records that are located close to you</button>
+            <span id="dateString"></span>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html>
