@@ -27,7 +27,7 @@ def test_Similartime():
 
 def test_NotSimilartime():
     result1 = timeSimilarity.timeLength(['1956/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 730.5], ['1957/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 123])
-    result2 = timeSimilarity.timeOverlap(['1956/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 730.5], ['2200/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 123])
+    result2 = timeSimilarity.timeOverlap(['1956/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 730.5], ['2000/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 123])
     result3 = timeSimilarity.similarInterval(['1956/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 730.5], ['1956/01/01 00:00:00 GMT+0', '2088/01/01 00:00:00 GMT+0', 0])
     assert result1 == 0
     assert result2 == 0
