@@ -3,8 +3,8 @@ import sys
 from math import *
 
 # add local modules folder
-file_path = os.path.join('..', 'Python_Modules')
-sys.path.append(file_path)
+# file_path = '../Python_Modules'
+# sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
 from subprocess import Popen, PIPE
@@ -50,18 +50,25 @@ def similarArea(bboxA, bboxB):
     boxA = _generateGeometryFromBbox(bboxA)
     boxB = _generateGeometryFromBbox(bboxB)
 
+    # print(boxA)
+
     areaA = boxA.GetArea()
     areaB = boxB.GetArea()
 
-    reachedPercentArea = 0
+    # print(areaA)
+    # print(areaB)
 
-    if areaA == areaB:
-        reachedPercentArea = 100
-    else:
+    reachedPercentArea = 0
+    try:
         if areaA >= areaB:
             reachedPercentArea = areaB*100/areaA
         else:
             reachedPercentArea = areaA*100/areaB
+    except ZeroDivisionError: # if both are points
+        reachedPercentArea = 100
+    finally:
+        reachedPercentArea = floor(reachedPercentArea*100)/100
+    # print(reachedPercentArea)
 
     return reachedPercentArea
 
@@ -141,6 +148,9 @@ def sameDatasetType(file1, file2):
 
 
 def _generateGeometryFromBbox(bbox):
+    """ 
+    Transformiert eine Boundingbox in eine gdal Geometrie in eine Projektion mit der gdal arbeitet
+    """
     source = osr.SpatialReference()
     source.ImportFromEPSG(4326)
     target = osr.SpatialReference()
