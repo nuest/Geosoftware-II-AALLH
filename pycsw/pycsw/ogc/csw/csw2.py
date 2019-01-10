@@ -60,10 +60,17 @@ class Csw2(object):
         self.version = '2.0.2'
 
     # Öffnen der Html page TAN
-    def extractmetadata(self):
-        print(os.getcwd())
-        f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
-        return f.read()
+    def openmap(self):
+        print('Aysel')
+        #f = codecs.open('/usr/lib/python3.5/site-packages/pycsw/page.html', 'r')
+        #print(f.read())
+       # webbrowser.open_new(f.read())
+
+
+        f_path = abspath('/usr/lib/python3.5/site-packages/pycsw/page.html')
+        if exists(f_path):
+            with open(f_path) as f:
+                return f.read()
 
     def getcapabilities(self):
         ''' Handle GetCapabilities request '''

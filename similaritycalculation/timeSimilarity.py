@@ -7,7 +7,6 @@ import time as timeMod
 file_path = os.path.join('..', 'Python_Modules')
 sys.path.append(file_path)
 
-from osgeo import gdal, ogr, osr
 from DateTime import DateTime
 from datetime import date
 
