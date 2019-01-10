@@ -305,6 +305,7 @@ class Repository(object):
 
     def update(self, record=None, recprops=None, constraint=None):
         ''' Update a record in the repository based on identifier '''
+        print("ja ich tue")
 
         if record is not None:
             identifier = getattr(record,
@@ -359,6 +360,7 @@ class Repository(object):
                             self.dataset, self.context.md_core_model['mappings']['pycsw:XML']))
                         }, synchronize_session='fetch')
                 self.session.commit()
+
                 return rows
             except Exception as err:
                 self.session.rollback()

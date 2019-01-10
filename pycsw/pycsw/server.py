@@ -42,6 +42,7 @@ from six.moves.configparser import SafeConfigParser
 import sys
 from time import time
 import wsgiref.util
+
 from pycsw.core.etree import etree
 from pycsw import oaipmh, opensearch, sru
 from pycsw.plugins.profiles import profile as pprofile
@@ -51,8 +52,8 @@ from pycsw.ogc.csw import csw2, csw3
 
 LOGGER = logging.getLogger(__name__)
 
-class Csw(object):
 
+class Csw(object):
     """ Base CSW server """
     def __init__(self, rtconfig=None, env=None, version='3.0.0'):
         """ Initialize CSW """
@@ -90,14 +91,14 @@ class Csw(object):
         self.language = {'639_code': 'en', 'text': 'english'}
         self.process_time_start = time()
 
-        # define CSW implementation object (default CSW2)
-        self.iface = csw2.Csw2(server_csw=self)
+        # define CSW implementation object (default CSW3)
+        self.iface = csw3.Csw3(server_csw=self)
         self.request_version = version
 
         if self.request_version == '2.0.2':
             self.iface = csw2.Csw2(server_csw=self)
             self.context.set_model('csw')
-        
+
         # load user configuration
         try:
             LOGGER.info('Loading user configuration')
@@ -178,7 +179,7 @@ class Csw(object):
         LOGGER.debug('Model: %s.', self.context.model)
 
         # load user-defined mappings if they exist
-        if self.config.has_option('repository', 'mappings'): # hier könnten wir eigene Mapppings einbinden 
+        if self.config.has_option('repository', 'mappings'):
             # override default repository mappings
             try:
                 import imp
@@ -268,7 +269,7 @@ class Csw(object):
             self.oaipmhobj = oaipmh.OAIPMH(self.context, self.config)
         return self.oaipmhobj
 
-    def dispatch(self, writer=sys.stdout, write_headers=True):#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    def dispatch(self, writer=sys.stdout, write_headers=True):
         """ Handle incoming HTTP request """
 
         error = 0
@@ -390,7 +391,7 @@ class Csw(object):
                 error = 1
                 code = 'NoApplicableCode'
                 locator = 'service'
-                text = 'Could not initialize repository. Check Could not initialize repository. Check server logs'
+                text = 'Could not initialize repository. Check server logs'
 
         else:  # load default repository
             self.orm = 'sqlalchemy'
@@ -489,18 +490,18 @@ class Csw(object):
                     Value MUST be CSW' % self.kvp['service']
 
                 # test version
-                #kvp_version = self.kvp.get('version', '')
-                #try:
-                    #kvp_version_integer = util.get_version_integer(kvp_version)
-                #except Exception as err:
-                    #kvp_version_integer = 'invalid_value'
-                #if (request != 'GetCapabilities' and
-                        #kvp_version_integer != own_version_integer):
-                    #error = 1
-                    #locator = 'version'
-                    #code = 'InvalidParameterValue'
-                    #text = ('Invalid value for version: %s. Value MUST be '
-                            #'2.0.2 or 3.0.0' % kvp_version)
+                kvp_version = self.kvp.get('version', '')
+                try:
+                    kvp_version_integer = util.get_version_integer(kvp_version)
+                except Exception as err:
+                    kvp_version_integer = 'invalid_value'
+                if (request != 'GetCapabilities' and
+                        kvp_version_integer != own_version_integer):
+                    error = 1
+                    locator = 'version'
+                    code = 'InvalidParameterValue'
+                    text = ('Invalid value for version: %s. Value MUST be '
+                            '2.0.2 or 3.0.0' % kvp_version)
 
                 # check for GetCapabilities acceptversions
                 if 'acceptversions' in self.kvp:
@@ -546,12 +547,12 @@ class Csw(object):
 
             if self.kvp['request'] == 'GetCapabilities':
                 self.response = self.iface.getcapabilities()
+            elif self.kvp['request'] == 'DescribeRecord':
+                self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetSimilarRecords': #GRA
                 self.response = self.iface.getsimilarrecords()
             elif self.kvp['request'] == 'GetSimilarityBBox': #TAN
                 self.response = self.iface.getsimilaritybbox()
-            elif self.kvp['request'] == 'DescribeRecord':
-                self.response = self.iface.describerecord()
             elif self.kvp['request'] == 'GetDomain':
                 self.response = self.iface.getdomain()
             elif self.kvp['request'] == 'GetRecords':
@@ -578,7 +579,7 @@ class Csw(object):
                     'Invalid request parameter: %s' % self.kvp['request']
                 )
 
-        LOGGER.info('Request processed')#bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        LOGGER.info('Request processed')
         if self.mode == 'sru':
             LOGGER.info('SRU mode detected; processing response.')
             self.response = self.sru().response_csw2sru(self.response,
@@ -601,15 +602,15 @@ class Csw(object):
         """ Handle GetCapabilities request """
         return self.iface.getcapabilities()
 
+    def describerecord(self):
+        """ Handle DescribeRecord request """
+        return self.iface.describerecord()
+    
     def getsimilarrecords(self): #GRA
         return self.iface.getsimilarrecords()
     
     def getsimilaritybbox(self): #TAN
         return self.iface.getsimilaritybbox()
-
-    def describerecord(self):
-        """ Handle DescribeRecord request """
-        return self.iface.describerecord()
 
     def getdomain(self):
         """ Handle GetDomain request """
@@ -644,19 +645,6 @@ class Csw(object):
 
         LOGGER.info('Writing response.')
 
-        #import webbrowser
-
-        # neuer code für unsere API html anzeigen zu können TAN
-        #if self.response == 'a':
-            #print('ja')
-            
-            #new = 2 # open in a new tab, if possible
-
-            #url = "'/usr/lib/python3.5/site-packages/pycsw/test.html'"
-            #webbrowser.open(url,new=new)
-            #open('/usr/lib/python3.5/site-packages/pycsw/test.html')
-            #print('nein')
-
         if hasattr(self, 'soap') and self.soap:
             self._gen_soap_wrapper()
 
@@ -668,7 +656,6 @@ class Csw(object):
                                   pretty_print=self.pretty_print,
                                   encoding='unicode')
 
-        # Funktion wird aufgerufen um xml in json umzuwandeln, wenn es in der url angegeben ist 
         if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
                 self.kvp['outputformat'] == 'application/json'):
             self.contenttype = self.kvp['outputformat']
@@ -681,45 +668,45 @@ class Csw(object):
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
                 self.kvp['request'] == 'GetSimilarRecords'):
             
-                if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
-                    self.kvp['outputformat'] == 'application/xml'):
-                        if 'outputformat' in self.kvp:
-                            self.contenttype = self.kvp['outputformat']
-                        else:
-                            self.contenttype = self.mimetype
+            if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
+                self.kvp['outputformat'] == 'application/xml'):
+                    if 'outputformat' in self.kvp:
+                        self.contenttype = self.kvp['outputformat']
+                    else:
+                        self.contenttype = self.mimetype
 
-                        xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
-                                '\n' % self.encoding)
-                        appinfo = '<!-- pycsw %s -->\n' % self.context.version 
+                    xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
+                            '\n' % self.encoding)
+                    appinfo = '<!-- pycsw %s -->\n' % self.context.version 
 
-                else:
-                    self.contenttype = self.kvp['request']
-                    from pycsw.core.formats import fmt_json
-                    response = fmt_json.xml2json(response,
-                                                self.context.namespaces,
-                                                self.pretty_print)
+            else:
+                self.contenttype = self.kvp['request']
+                from pycsw.core.formats import fmt_json
+                response = fmt_json.xml2json(response,
+                                            self.context.namespaces,
+                                            self.pretty_print)
                                                 
         
         elif (isinstance(self.kvp, dict) and 'request' in self.kvp and
                 self.kvp['request'] == 'GetSimilarityBBox'):
             
-                if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
-                    self.kvp['outputformat'] == 'application/xml'):
-                        if 'outputformat' in self.kvp:
-                            self.contenttype = self.kvp['outputformat']
-                        else:
-                            self.contenttype = self.mimetype
+            if (isinstance(self.kvp, dict) and 'outputformat' in self.kvp and
+                self.kvp['outputformat'] == 'application/xml'):
+                    if 'outputformat' in self.kvp:
+                        self.contenttype = self.kvp['outputformat']
+                    else:
+                        self.contenttype = self.mimetype
 
-                        xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
-                                '\n' % self.encoding)
-                        appinfo = '<!-- pycsw %s -->\n' % self.context.version 
+                    xmldecl = ('<?xml version="1.0" encoding="%s" standalone="no"?>'
+                            '\n' % self.encoding)
+                    appinfo = '<!-- pycsw %s -->\n' % self.context.version 
 
-                else:
-                    self.contenttype = self.kvp['request']
-                    from pycsw.core.formats import fmt_json
-                    response = fmt_json.xml2json(response,
-                                                self.context.namespaces,
-                                                self.pretty_print)                                        
+            else:
+                self.contenttype = self.kvp['request']
+                from pycsw.core.formats import fmt_json
+                response = fmt_json.xml2json(response,
+                                            self.context.namespaces,
+                                            self.pretty_print)
 
         else:  # it's XML
             if 'outputformat' in self.kvp:
@@ -806,7 +793,6 @@ class Csw(object):
                 'methods': {'get': False, 'post': True},
                 'parameters': {}
             }
-            
 
             schema_values = [
                 'http://www.opengis.net/cat/csw/2.0.2',
@@ -855,9 +841,6 @@ class Csw(object):
             ipaddress = self.environ['HTTP_X_FORWARDED_FOR'].split(',')[0].strip()
         else:
             ipaddress = self.environ['REMOTE_ADDR']
-        
-        print(ipaddress)
-        print(self.config.get('manager', 'allowed_ips').split(','))
 
         if not self.config.has_option('manager', 'allowed_ips') or \
         (self.config.has_option('manager', 'allowed_ips') and not

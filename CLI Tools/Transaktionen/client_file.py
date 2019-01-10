@@ -1,4 +1,5 @@
-#https://stackoverflow.com/questions/40140412/post-xml-file-with-requests/40140503
+# author: Anika Graupner 
+# source: https://stackoverflow.com/questions/40140412/post-xml-file-with-requests/40140503
 import requests
 
 # Set the name of the XML file.

@@ -267,6 +267,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     },
                     'GetSimilarityBBox': {
@@ -275,6 +281,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     }
                 },
@@ -428,6 +440,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     },
                     'GetSimilarityBBox': {
@@ -436,6 +454,12 @@ class StaticContext(object):
                             'post': False,
                         },
                         'parameters': {
+                            'outputFormat': {
+                                'values': ['application/xml', 'application/json']
+                            },
+                            'ElementSetName': {
+                                'values': ['brief', 'summary', 'full']
+                            }
                         }
                     }
                 },
