@@ -11,18 +11,17 @@ import sqlite3
 import tempfile
 
 # add local modules folder
-file_path = os.path.join('..', 'Python_Modules')
-sys.path.append(file_path)
+# file_path = os.path.join('..', 'Python_Modules')
+# sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
 import click
-import netCDF4 as nc
+# import netCDF4 as nc
 import pandas as pd
 import pygeoj
 import shapefile
 import xarray as xr
 import ogr2ogr
-
 
 # asking for parameters in command line
 @click.command()
@@ -40,65 +39,78 @@ def main(path, name, clear):
     
 
 def getBoundingBox(name, path):
-    """returns the bounding Box of supported Datatypes and standards in WGS84.
-
-    supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc), GeoPackage (.gpkg), all ISO19xxx standardised formats and CSV on the web
-    
+    """returns the bounding Box of supported Datatypes and standards in WGS84. The file MUST contain a valid CRS or has to be standardized like GeoJSON is WGS84\n
+    supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc), GeoPackage (.gpkg), all ISO19xxx standardised formats and CSV on the web\n
     @param path Path to the file
     @param name name of the file with extension
     @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
     """
     # connect name and path to file
     filepath = os.path.join(path, name)
+    if not os.path.exists(filepath):
+        return (None, "File not found!")
     # get file extension
     filename, file_extension = os.path.splitext(filepath)
 
 #################################################################
     def shapefileCase(filepath):
-        """Method for extracting the boundingbox of a shapefile
-
+        """Method for extracting the boundingbox of a shapefile\n
         @param filepath Full path to shapefile
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
         """
         try:
+            dataset = ogr.Open(filepath)
+            layer = dataset.GetLayer()
+            crs = layer.GetSpatialRef()
+            if crs.IsProjected() == 1:
+                crs = int(crs.GetAttrValue("PROJCS|AUTHORITY", 1))
+            elif crs.IsGeographic() == 1:
+                crs = int(crs.GetAttrValue("GEOGCS|AUTHORITY", 1))
+            else:
+                return (None, "CRS is missing!")
+            
+
             myshp = open(filepath, "rb")
             sf = shapefile.Reader(shp=myshp)
+            envelope = sf.bbox
+            bbox = CRSTransform(envelope[1], envelope[0], crs)
+            bbox.extend(CRSTransform(envelope[3], envelope[2], crs))
         # error
         except:
             return (None, "File Error!")
         else: # if no error accured
-            return (sf.bbox, None)
+            return (bbox, None)
 
     def geojsonCase(filepath):
-        """Method for extracting the boundingbox of a valid GeoJSON file
-
+        """Method for extracting the boundingbox of a valid GeoJSON file\n
         @param filepath Full path to GeoJSON
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
         """
         try:
             myGeojson = pygeoj.load(filepath=filepath)
             return (myGeojson.bbox, None)
+        except:
+            return (None, "File Error!")
 
-        # except ValueError: # if geojson is not a featureCollection
-        #     myJson = open(filepath, "rb")
-        #     myJson = json.load(myJson)
-
-        #     # raw FeatureCollection
-        #     myGeojson = {
-        #         "type": "FeatureCollection",
-        #         "features": []
-        #     }
-
-        #     myGeojson.get("features").append(myJson)
-        #     myGeojson = pygeoj.load(data=myGeojson)
-        #     return (myGeojson.bbox, None)
-        # errors
+    def ogr2ogrCase(filepath):
+        """Method for extracting the crs of a valid GeoJSON file\n
+        @param filepath Full path to GeoJSON
+        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
+        """
+        try:
+            myGeojson = pygeoj.load(filepath=filepath)
+            crs = myGeojson.crs['properties']['name']
+            if crs.find('EPSG') != -1:
+                crs = int(crs.split(':')[-1])
+            bbox = myGeojson.bbox
+            wgsBbox = CRSTransform(bbox[1], bbox[0], crs)
+            wgsBbox.extend(CRSTransform(bbox[3], bbox[2], crs))
+            return (wgsBbox, None)
         except:
             return (None, "File Error!")
 
     def tiffCase(filepath):
-        """Method for extracting the boundingbox of a GeoTIFF
-
+        """Method for extracting the boundingbox of a GeoTIFF\n
         @param filepath Full path to GeoTIFF
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
         """
@@ -150,11 +162,12 @@ def getBoundingBox(name, path):
 
         @param filepath Full path to netCDF file
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
+        @see https://gis.stackexchange.com/questions/270165/gdal-to-acquire-netcdf-like-metadata-structure-in-python
         """
         try:
-            # https://gis.stackexchange.com/questions/270165/gdal-to-acquire-netcdf-like-metadata-structure-in-python
             ds = xr.open_dataset(filepath)
             # transform coordinates section in a dictionary
+            print(ds.to_dict())
             coordinates = ds.to_dict()['coords']
             # get the coordinates as a list
             lats = coordinates['latitude']['data']
@@ -174,14 +187,14 @@ def getBoundingBox(name, path):
 
         @param filepath Full path to GeoPackage
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
+        @see https://stackoverflow.com/questions/35945437/python-gdal-projection-conversion-from-wgs84-to-nztm2000-is-not-correct
         """
-        # @see https://stackoverflow.com/questions/35945437/python-gdal-projection-conversion-from-wgs84-to-nztm2000-is-not-correct
         try:
             conn = sqlite3.connect(filepath)
             c = conn.cursor()
             c.execute("""   SELECT min(min_x), min(min_y), max(max_x), max(max_y), srs_id
                             FROM gpkg_contents
-                            WHERE NOT srs_id = 4327
+                            WHERE NOT srs_id = 4327 OR srs_id = 4328
                             GROUP BY srs_id
                     """)
             row = c.fetchall()
@@ -199,8 +212,8 @@ def getBoundingBox(name, path):
             
             wgs84bboxen = []
             for bbox in bboxes:
-                box = CRSTransform(bbox[0], bbox[1], bbox[4])
-                box.extend(CRSTransform(bbox[2], bbox[3], bbox[4]))
+                box = CRSTransform(bbox[1], bbox[0], bbox[4])
+                box.extend(CRSTransform(bbox[3], bbox[2], bbox[4]))
                 wgs84bboxen.append(box)
 
             bbox = [wgs84bboxen[0][0], wgs84bboxen[0][1], wgs84bboxen[0][2], wgs84bboxen[0][3]]
@@ -226,12 +239,11 @@ def getBoundingBox(name, path):
 
     def csvCase(filepath):
         """Method for extracting the boundingbox of a "CSV on the Web" formated file
-        Collums holding the coordinates must be named either longitude/lon/lng/long, latitude/lat
-
+        Collums holding the coordinates must be named either longitude/lon/lng/long, latitude/lat and the CRS collum must be named either crs/srs/reference system/coordinate reference systems\n
         @param filepath Full path to CSV/text file
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
+        @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         """
-        # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         try: # finding the correct collums for latitude and longitude
             csvfile = open(filepath)
             head = csv.reader(csvfile, delimiter=' ', quotechar='|')
@@ -240,33 +252,44 @@ def getBoundingBox(name, path):
             header = next(head)[0].replace(";", ",").split(",")
 
             # searching for valid names for latitude and longitude
-            def getLatLon(header):
+            def getLatLonCrs(header):
                 """get the correct names of the collumns holding the coordinates
                 @param header Header of the CSV
-                @returns (lon, lat) where lon, lat are the collum names
+                @returns (lon, lat, crs) where lon, lat, crs are the collum names
                 """
                 lng=None 
                 lat=None
+                crs=None
                 for t in header:
-                    if t == "longitude":
-                        lng = "longitude"
-                    if t == "latitude":
-                        lat = "latitude"
-                    if t == "lon":
-                        lng = "lon"
-                    if t == "long":
-                        lng = "long"
-                    if t == "lng":
-                        lng = "lng"
-                    if t == "lat":
-                        lat = "lat"
-                return (lng, lat)
+                    if t.lower() == "longitude":
+                        lng = t
+                    if t.lower() == "latitude":
+                        lat = t
+                    if t.lower() == "lon":
+                        lng = t
+                    if t.lower() == "long":
+                        lng = t
+                    if t.lower() == "lng":
+                        lng = t
+                    if t.lower() == "lat":
+                        lat = t
+                    if t.lower() == "crs":
+                        crs = t
+                    if t.lower() == "srs":
+                        crs = t
+                    if t.lower() == "reference system":
+                        crs = t
+                    if t.lower() == "coordinate reference systems":
+                        crs = t
+                return (lng, lat, crs)
             
-            lng, lat = getLatLon(header)
+            lng, lat, crs = getLatLonCrs(header)
             
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
             if(lat is None or lng is None):
-                raise ValueError("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
+                raise ValueError("please rename latitude an longitude: latitude/lat, longitude/lon/lng")
+            if(crs is None):
+                raise ValueError("please provide the coordinate reference systems. Name: crs/srs/coordinate reference systems/reference systems")
         # errors
         except ValueError as e:
             return (None, e)
@@ -280,6 +303,7 @@ def getBoundingBox(name, path):
                 # get all coordinates from found collums
                 latitudes = df[lng].tolist()
                 longitudes = df[lat].tolist()
+                srs = df[crs].tolist()
 
             # in case the words are separated by a ';' insted of a comma
             except KeyError:
@@ -289,6 +313,7 @@ def getBoundingBox(name, path):
                     # get all coordinates from found collums
                     latitudes = df[lng].tolist()
                     longitudes = df[lat].tolist()
+                    srs = df[crs].tolist()
                     
                 # the csv is not valid
                 except KeyError:
@@ -298,7 +323,8 @@ def getBoundingBox(name, path):
                 return (None, "File Error: File not found or check if your csv file is valid to 'csv on the web'")
 
         # taking the smallest and highest coordinates from the lists if no exceptions accured
-        bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+        bbox = CRSTransform(min(latitudes), min(longitudes), srs[0])
+        bbox.extend(CRSTransform(max(latitudes), max(longitudes), srs[0]))
         return (bbox, None)
 
     def ISOCase(filepath):
@@ -306,22 +332,33 @@ def getBoundingBox(name, path):
 
         @param filepath Full path to the ISO19xxx standardized file
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
+        @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
         """
-        try:
-            # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
-            # convert the gml file to a GeoJSON file
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                curDir = os.getcwd()
-                os.chdir(tmpdirname)
-                ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
-                # get boundingbox from generated GeoJSON file
-                myGeojson = pygeoj.load(filepath="output.json")
-                os.chdir(curDir)
-            # delete generated GeoJSON file
-            return (myGeojson.bbox, None)
-        # errors
+        try: # in case GDAL works
+            ogr.UseExceptions()
+            isofile = ogr.CreateGeometryFromGML(filepath)
+            crs = isofile.GetSpatialRef()
+            bbox = isofile.GetEnvelope()
+            result = CRSTransform(bbox[1], bbox[0], crs)
+            result.extend(CRSTransform(bbox[3], bbox[2], crs))
+            ogr.DontUseExceptions()
+            return (result, None)
         except:
-            return (None, "file not found or your gml/xml/kml data is not valid")
+            try:
+                # convert the gml file to a GeoJSON file
+                with tempfile.TemporaryDirectory() as tmpdirname:
+                    curDir = os.getcwd()
+                    os.chdir(tmpdirname)
+                    ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
+                    # get boundingbox from generated GeoJSON file
+                    result = ogr2ogrCase("output.json")
+                    os.chdir(curDir)
+                # delete generated GeoJSON file
+                return result
+            # errors
+            except:
+                return (None, "file not found or your gml/xml/kml data is not valid")
+
 
 #################################################################
 
@@ -361,6 +398,7 @@ def getBoundingBox(name, path):
 #################################################################
 
 def CRSTransform(Lat, Long, refsys):
+    # Input refsys = EPSG
     # Coordinate Reference System (CRS)
     SourceEPSG = refsys
     TargetEPSG = 4326
@@ -372,7 +410,7 @@ def CRSTransform(Lat, Long, refsys):
     target.ImportFromEPSG(TargetEPSG)
 
     transform = osr.CoordinateTransformation(source, target)
-    point = ogr.CreateGeometryFromWkt("POINT (%s %s)" % (Lat, Long))
+    point = ogr.CreateGeometryFromWkt("POINT (%s %s)" % (Long, Lat))
     point.Transform(transform)
     return [point.GetX(),point.GetY()]
 

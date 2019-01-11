@@ -1,14 +1,13 @@
 """
 @Author Henry Fock
 """
-import sys
+import sys, os
 # add local modules folder
-file_path = '../Python_Modules'
-sys.path.append(file_path)
+# file_path = os.path.join('..', 'Python_Modules')
+# sys.path.append(file_path)
 
 import getBoundingBox as box
 import getTimeExtent as timeEx
-import subprocess
 import threading
 
 from os import listdir

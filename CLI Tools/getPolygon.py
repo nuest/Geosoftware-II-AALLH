@@ -6,22 +6,19 @@ Created on 29.10.2018
 import csv
 import os
 import sys
-import json
 import sqlite3
 import tempfile
 import getBoundingBox
 
 # add local modules folder
-file_path = os.path.join('..', 'Python_Modules')
-sys.path.append(file_path)
+# file_path = os.path.join('..', 'Python_Modules')
+# sys.path.append(file_path)
 
-from osgeo import gdal, ogr, osr
+from osgeo import ogr, osr
 import click
-import netCDF4 as nc
 import pandas as pd
 import pygeoj
 import shapefile
-import xarray as xr
 import ogr2ogr
 
 
@@ -183,18 +180,18 @@ def getPolygon(name, path):
                 lng=None 
                 lat=None
                 for t in header:
-                    if t == "longitude":
-                        lng = "longitude"
-                    if t == "latitude":
-                        lat = "latitude"
-                    if t == "lon":
-                        lng = "lon"
-                    if t == "long":
-                        lng = "long"
-                    if t == "lng":
-                        lng = "lng"
-                    if t == "lat":
-                        lat = "lat"
+                    if t.lower() == "longitude":
+                        lng = t
+                    if t.lower() == "latitude":
+                        lat = t
+                    if t.lower() == "lon":
+                        lng = t
+                    if t.lower() == "long":
+                        lng = t
+                    if t.lower() == "lng":
+                        lng = t
+                    if t.lower() == "lat":
+                        lat = t
                 return (lng, lat)
             
             lng, lat = getLatLon(header)

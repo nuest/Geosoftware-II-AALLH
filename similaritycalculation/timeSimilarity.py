@@ -4,12 +4,10 @@ from math import *
 import time as timeMod
 
 # add local modules folder
-file_path = os.path.join('..', 'Python_Modules')
-sys.path.append(file_path)
+# file_path = os.path.join('..', 'Python_Modules')
+# sys.path.append(file_path)
 
 from DateTime import DateTime
-from datetime import date
-
 
 def timeLength(timeA, timeB):
     startA = DateTime(timeA[0])
@@ -19,7 +17,7 @@ def timeLength(timeA, timeB):
     endB = DateTime(timeB[1])
 
     if startA > endA or startB > endB:
-        assert AttributeError("start value is higher than end value")
+        raise AttributeError("start value is higher than end value")
 
     lengthA = endA - startA
     lengthB = endB - startB

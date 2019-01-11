@@ -9,15 +9,12 @@ import time as timeMod
 import tempfile
 
 # add local modules folder
-file_path = os.path.join('..', 'Python_Modules')
-sys.path.append(file_path)
+# file_path = os.path.join('..', 'Python_Modules')
+# sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
 import click
-import netCDF4 as nc
 import pandas as pd
-import pygeoj
-import shapefile
 import xarray as xr
 import ogr2ogr
 from DateTime import DateTime
@@ -97,11 +94,11 @@ def getTimeExtent(name, path):
             # searching for valid names for latitude and longitude
             for t in header:
                 if t == "date":
-                   time = "date"
+                   time = t
                 if t == "time":
-                    time = "time"
+                    time = t
                 if t == "timestamp":
-                    time = "timestamp"
+                    time = t
             csvfile.close()
 
             csvfile = open(filepath)
@@ -163,6 +160,8 @@ def getTimeExtent(name, path):
                     prop = "time"
                 elif "date" in jsonDict["features"][0]:
                     prop = "date"
+                elif "dateTime" in jsonDict["features"][0]:
+                    prop = "dateTime"
                 else:
                     return (None, "no time data available")
 
@@ -188,6 +187,8 @@ def getTimeExtent(name, path):
                     prop = "time"
                 elif "date" in jsonDict:
                     prop = "date"
+                elif "dateTime" in jsonDict["features"][0]:
+                    prop = "dateTime"
                 else:
                     return (None, "no time data available")
 
@@ -218,6 +219,24 @@ def getTimeExtent(name, path):
             except:
                 pass
 
+    def ISOCase(filepath):
+        try:
+            # @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
+            # convert the gml file to a GeoJSON file
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                curDir = os.getcwd()
+                os.chdir(tmpdirname)
+                ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
+                # get boundingbox from generated GeoJSON file
+                result = getTimeExtent("output.json", "")
+                os.chdir(curDir)
+                # delete generated GeoJSON file
+            return result
+        # errors
+        except:
+            return (None, "file not found or your gml/xml/kml data is not valid")
+        
+
 #################################################################
 
     # netCDF handeling
@@ -235,6 +254,9 @@ def getTimeExtent(name, path):
     # geopackage handeling
     elif file_extension == ".gpkg":
         return geoPackageCase(filepath)
+    
+    elif file_extension in (".gml", ".xml", ".kml"):
+        return ISOCase(filepath)
     
     # unsupported files handeling
     else:
