@@ -6,7 +6,6 @@ Created on 29.10.2018
 import csv
 import os
 import sys
-import json
 import sqlite3
 import tempfile
 
@@ -24,10 +23,12 @@ import xarray as xr
 import ogr2ogr
 
 # asking for parameters in command line
+
+
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="Filename with extension")
-@click.option('--clear','-c', default=False, is_flag=True, help='Clear screen before showing results')
+@click.option('--clear', '-c', default=False, is_flag=True, help='Clear screen before showing results')
 def main(path, name, clear):
     res = getBoundingBox(name, path)
     if clear:
@@ -36,7 +37,7 @@ def main(path, name, clear):
         click.echo(res[0])
     else:
         click.echo(res[1])
-    
+
 
 def getBoundingBox(name, path):
     """returns the bounding Box of supported Datatypes and standards in WGS84. The file MUST contain a valid CRS or has to be standardized like GeoJSON is WGS84\n
@@ -68,7 +69,6 @@ def getBoundingBox(name, path):
                 crs = int(crs.GetAttrValue("GEOGCS|AUTHORITY", 1))
             else:
                 return (None, "CRS is missing!")
-            
 
             myshp = open(filepath, "rb")
             sf = shapefile.Reader(shp=myshp)
@@ -78,7 +78,7 @@ def getBoundingBox(name, path):
         # error
         except:
             return (None, "File Error!")
-        else: # if no error accured
+        else:  # if no error accured
             return (bbox, None)
 
     def geojsonCase(filepath):
@@ -102,6 +102,8 @@ def getBoundingBox(name, path):
             crs = myGeojson.crs['properties']['name']
             if crs.find('EPSG') != -1:
                 crs = int(crs.split(':')[-1])
+            else:
+                return (None, "No reference system found or not as EPSG Code")
             bbox = myGeojson.bbox
             wgsBbox = CRSTransform(bbox[1], bbox[0], crs)
             wgsBbox.extend(CRSTransform(bbox[3], bbox[2], crs))
@@ -118,7 +120,7 @@ def getBoundingBox(name, path):
         try:
             # get the existing coordinate system
             ds = gdal.Open(filepath)
-            old_cs= osr.SpatialReference()
+            old_cs = osr.SpatialReference()
             old_cs.ImportFromWkt(ds.GetProjectionRef())
 
             # create the new coordinate system
@@ -137,20 +139,20 @@ def getBoundingBox(name, path):
             new_cs .ImportFromWkt(wgs84_wkt)
 
             # create a transform object to convert between coordinate systems
-            transform = osr.CoordinateTransformation(old_cs,new_cs) 
+            transform = osr.CoordinateTransformation(old_cs, new_cs)
 
-            #get the point to transform, pixel (0,0) in this case
+            # get the point to transform, pixel (0,0) in this case
             width = ds.RasterXSize
             height = ds.RasterYSize
             gt = ds.GetGeoTransform()
             minx = gt[0]
-            miny = gt[3] + width*gt[4] + height*gt[5] 
+            miny = gt[3] + width*gt[4] + height*gt[5]
             maxx = gt[0] + width*gt[1] + height*gt[2]
-            maxy = gt[3] 
+            maxy = gt[3]
 
-            #get the coordinates in lat long
-            latlongmin = transform.TransformPoint(minx,miny)
-            latlongmax = transform.TransformPoint(maxx,maxy)
+            # get the coordinates in lat long
+            latlongmin = transform.TransformPoint(minx, miny)
+            latlongmax = transform.TransformPoint(maxx, maxy)
             bbox = [latlongmin[0], latlongmin[1], latlongmax[0], latlongmax[1]]
             return (bbox, None)
         # errors
@@ -201,22 +203,26 @@ def getBoundingBox(name, path):
             bboxes = []
 
             if row is None:
-                raise LookupError("No valid data detected (EPSG:4327 not supported)")
+                raise LookupError(
+                    "No valid data detected (check if CRS maybe depracted)")
 
             for line in row:
                 if not any(x is None for x in line):
-                    bboxes.append([line[0], line[1], line[2], line[3], line[4]])
-            
+                    bboxes.append(
+                        [line[0], line[1], line[2], line[3], line[4]])
+
             if bboxes == []:
-                raise LookupError("No valid data detected! Coordinates in gpkg_contents are invalid")
-            
+                raise LookupError(
+                    "No valid data detected! Coordinates in gpkg_contents are invalid")
+
             wgs84bboxen = []
             for bbox in bboxes:
                 box = CRSTransform(bbox[1], bbox[0], bbox[4])
                 box.extend(CRSTransform(bbox[3], bbox[2], bbox[4]))
                 wgs84bboxen.append(box)
 
-            bbox = [wgs84bboxen[0][0], wgs84bboxen[0][1], wgs84bboxen[0][2], wgs84bboxen[0][3]]
+            bbox = [wgs84bboxen[0][0], wgs84bboxen[0][1],
+                    wgs84bboxen[0][2], wgs84bboxen[0][3]]
             for wgs84Box in wgs84bboxen:
                 if wgs84Box[0] < bbox[0]:
                     bbox[0] = wgs84Box[0]
@@ -244,11 +250,11 @@ def getBoundingBox(name, path):
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
         @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         """
-        try: # finding the correct collums for latitude and longitude
+        try:  # finding the correct collums for latitude and longitude
             csvfile = open(filepath)
             head = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            # get the headline an convert, if possible, ';' to ',' 
-            # and seperate each word devided by a ',' into an array 
+            # get the headline an convert, if possible, ';' to ','
+            # and seperate each word devided by a ',' into an array
             header = next(head)[0].replace(";", ",").split(",")
 
             # searching for valid names for latitude and longitude
@@ -257,9 +263,9 @@ def getBoundingBox(name, path):
                 @param header Header of the CSV
                 @returns (lon, lat, crs) where lon, lat, crs are the collum names
                 """
-                lng=None 
-                lat=None
-                crs=None
+                lng = None
+                lat = None
+                crs = None
                 for t in header:
                     if t.lower() == "longitude":
                         lng = t
@@ -282,20 +288,22 @@ def getBoundingBox(name, path):
                     if t.lower() == "coordinate reference systems":
                         crs = t
                 return (lng, lat, crs)
-            
+
             lng, lat, crs = getLatLonCrs(header)
-            
+
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
             if(lat is None or lng is None):
-                raise ValueError("please rename latitude an longitude: latitude/lat, longitude/lon/lng")
+                raise ValueError(
+                    "please rename latitude an longitude: latitude/lat, longitude/lon/lng")
             if(crs is None):
-                raise ValueError("please provide the coordinate reference systems. Name: crs/srs/coordinate reference systems/reference systems")
+                raise ValueError(
+                    "please provide the coordinate reference systems. Name: crs/srs/coordinate reference systems/reference systems")
         # errors
         except ValueError as e:
             return (None, e)
         except:
             return (None, "File Error!")
-        
+
         # if no error accured
         else:
             try:
@@ -314,7 +322,7 @@ def getBoundingBox(name, path):
                     latitudes = df[lng].tolist()
                     longitudes = df[lat].tolist()
                     srs = df[crs].tolist()
-                    
+
                 # the csv is not valid
                 except KeyError:
                     return (None, "Pleas seperate your data with either ',' or ';'!")
@@ -334,10 +342,16 @@ def getBoundingBox(name, path):
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
         @see https://gis.stackexchange.com/questions/39080/using-ogr2ogr-to-convert-gml-to-shapefile-in-python
         """
-        try: # in case GDAL works
+        try:  # in case GDAL works
             ogr.UseExceptions()
             isofile = ogr.CreateGeometryFromGML(filepath)
             crs = isofile.GetSpatialRef()
+            if crs.IsProjected() == 1:
+                crs = int(crs.GetAttrValue("PROJCS|AUTHORITY", 1))
+            elif crs.IsGeographic() == 1:
+                crs = int(crs.GetAttrValue("GEOGCS|AUTHORITY", 1))
+            else:
+                return (None, "CRS is missing!")
             bbox = isofile.GetEnvelope()
             result = CRSTransform(bbox[1], bbox[0], crs)
             result.extend(CRSTransform(bbox[3], bbox[2], crs))
@@ -349,7 +363,8 @@ def getBoundingBox(name, path):
                 with tempfile.TemporaryDirectory() as tmpdirname:
                     curDir = os.getcwd()
                     os.chdir(tmpdirname)
-                    ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
+                    ogr2ogr.main(
+                        ["", "-f", "GeoJSON", "output.json", filepath])
                     # get boundingbox from generated GeoJSON file
                     result = ogr2ogrCase("output.json")
                     os.chdir(curDir)
@@ -362,13 +377,12 @@ def getBoundingBox(name, path):
 
 #################################################################
 
-
     # shapefile handelig
     if file_extension == ".shp":
         return shapefileCase(filepath)
 
     # geojson handeling
-    elif file_extension in (".json" , ".geojson"):
+    elif file_extension in (".json", ".geojson"):
         return geojsonCase(filepath)
 
     # GeoTiff handeling
@@ -390,12 +404,13 @@ def getBoundingBox(name, path):
     # gml handeling
     elif file_extension in (".gml", ".xml", ".kml"):
         return ISOCase(filepath)
-                
+
     # if the extension has not been implemented yet or won't be supported
     else:
         return (None, "type %s not yet supported" % file_extension)
 
 #################################################################
+
 
 def CRSTransform(Lat, Long, refsys):
     # Input refsys = EPSG
@@ -412,7 +427,7 @@ def CRSTransform(Lat, Long, refsys):
     transform = osr.CoordinateTransformation(source, target)
     point = ogr.CreateGeometryFromWkt("POINT (%s %s)" % (Long, Lat))
     point.Transform(transform)
-    return [point.GetX(),point.GetY()]
+    return [point.GetX(), point.GetY()]
 
 
 # Main method

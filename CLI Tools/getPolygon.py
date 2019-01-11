@@ -26,7 +26,7 @@ import ogr2ogr
 @click.command()
 @click.option('--path', prompt="File path", help='Path to file')
 @click.option('--name', prompt="File name", help="File name with extension")
-@click.option('--clear','-c', default=False, is_flag=True, help='Clear screen before showing results')
+@click.option('--clear', '-c', default=False, is_flag=True, help='Clear screen before showing results')
 def main(path, name, clear):
     res = getPolygon(name, path)
     if clear:
@@ -35,13 +35,13 @@ def main(path, name, clear):
         click.echo(res[0])
     else:
         click.echo(res[1])
-    
+
 
 def getPolygon(name, path):
     """returns the Convex Hull of supported Datatypes and standards in WGS84.
 
     supported data: Shapefile (.shp), GeoJson (.json/.geojson), GeoTIFF (.tif), netCDF (.nc), GeoPackage (.gpkg), all ISO19xxx standardised formats and CSV on the web
-    
+
     @param path Path to the file
     @param name name of the file with extension
     @returns a Convex Hull in first place of a tuple as Array. Points in WGS84 ([(long, lat), (long, lat), ...], None)
@@ -60,17 +60,28 @@ def getPolygon(name, path):
         @returns a tuple where in first place is the convex hull as an array of point tuples
         """
         try:
+            dataset = ogr.Open(filepath)
+            layer = dataset.GetLayer()
+            crs = layer.GetSpatialRef()
+            if crs.IsProjected() == 1:
+                crs = int(crs.GetAttrValue("PROJCS|AUTHORITY", 1))
+            elif crs.IsGeographic() == 1:
+                crs = int(crs.GetAttrValue("GEOGCS|AUTHORITY", 1))
+            else:
+                return (None, "CRS is missing!")
+
             myshp = open(filepath, "rb")
             sf = shapefile.Reader(shp=myshp)
             shapes = sf.shapes()
             pointList = []
             for shape in shapes:
                 for points in shape.points:
-                    pointList.append(map(tuple, points))
+                    pointList.append(
+                        tuple(CRSTransform(points[1], points[0], crs)))
         # error
         except:
             return (None, "File Error!")
-        else: # if no error accured
+        else:  # if no error accured
             return (convex_hull(pointList), None)
 
     def jsonCase(filepath):
@@ -82,23 +93,9 @@ def getPolygon(name, path):
             myGeojson = pygeoj.load(filepath=filepath)
             pointList = []
 
-            def getCoordinates(listInList):
-                coordinates = []
-                for sublist in listInList:
-                    if type(sublist) is list:
-                        if type(sublist[0]) is list:
-                            coordinates.extend(getCoordinates(sublist))
-                        else:
-                            coordinates.extend(listInList)
-                            break
-                    else:
-                        coordinates.append(listInList)
-                        break
-                return coordinates
-
             for features in myGeojson:
-                pointList.extend(list(map(tuple, getCoordinates(features.geometry.coordinates))))
-
+                pointList.extend(
+                    list(map(tuple, getCoordinatesFromGeoJson(features.geometry.coordinates))))
 
             return (convex_hull(pointList), None)
         # errors
@@ -127,18 +124,24 @@ def getPolygon(name, path):
             c = conn.cursor()
             c.execute("""   SELECT min_x, min_y, max_x, max_y, srs_id
                             FROM gpkg_contents
-                            WHERE NOT srs_id = 4327
-                            GROUP BY srs_id
+                            WHERE NOT srs_id = 4327 OR srs_id = 4328
                     """)
             row = c.fetchall()
             bboxes = []
 
             if row is None:
-                assert LookupError("No valid data detected (EPSG:4327 not supported)")
+                raise LookupError(
+                    "No valid data detected (check if CRS maybe depracted)")
 
             for line in row:
-                bboxes.append([line[0], line[1], line[2], line[3], line[4]])
-            
+                if not any(x is None for x in line):
+                    bboxes.append(
+                        [line[0], line[1], line[2], line[3], line[4]])
+
+            if bboxes == []:
+                raise LookupError(
+                    "No valid data detected! Coordinates in gpkg_contents are invalid")
+
             wgs84points = []
             for bbox in bboxes:
                 wgs84points.append(CRSTransform(bbox[0], bbox[1], bbox[4]))
@@ -164,21 +167,22 @@ def getPolygon(name, path):
         @returns a tuple where in first place is the convex hull as an array of point tuples
         @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         """
-        try: # finding the correct collums for latitude and longitude
+        try:  # finding the correct collums for latitude and longitude
             csvfile = open(filepath)
             head = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            # get the headline an convert, if possible, ';' to ',' 
-            # and seperate each word devided by a ',' into an array 
+            # get the headline an convert, if possible, ';' to ','
+            # and seperate each word devided by a ',' into an array
             header = next(head)[0].replace(";", ",").split(",")
 
             # searching for valid names for latitude and longitude
-            def getLatLon(header):
+            def getLatLonCrs(header):
                 """get the correct names of the collumns holding the coordinates
                 @param header Header of the CSV
-                @returns (lon, lat) where lon, lat are the collum names
+                @returns (lon, lat, crs) where lon, lat, crs are the collum names
                 """
-                lng=None 
-                lat=None
+                lng = None
+                lat = None
+                crs = None
                 for t in header:
                     if t.lower() == "longitude":
                         lng = t
@@ -192,14 +196,25 @@ def getPolygon(name, path):
                         lng = t
                     if t.lower() == "lat":
                         lat = t
-                return (lng, lat)
-            
-            lng, lat = getLatLon(header)
+                    if t.lower() == "crs":
+                        crs = t
+                    if t.lower() == "srs":
+                        crs = t
+                    if t.lower() == "reference system":
+                        crs = t
+                    if t.lower() == "coordinate reference systems":
+                        crs = t
+                return (lng, lat, crs)
+
+            lng, lat, crs = getLatLonCrs(header)
 
             # if there is no valid name or coordinates, an exception is thrown an cought with an errormassage
             if(lat is None or lng is None):
-                raise ValueError("pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
-
+                raise ValueError(
+                    "pleas rename latitude an longitude: latitude/lat, longitude/lon/lng")
+            if(crs is None):
+                raise ValueError(
+                    "please provide the coordinate reference systems. Name: crs/srs/coordinate reference systems/reference systems")
 
         # errors
         except ValueError as e:
@@ -207,7 +222,6 @@ def getPolygon(name, path):
         except:
             return (None, "File Error!")
 
-        
         # if no error accured
         else:
             try:
@@ -215,7 +229,8 @@ def getPolygon(name, path):
                 # get all coordinates from found collums
                 latitudes = df[lng].tolist()
                 longitudes = df[lat].tolist()
-                
+                srs = df[crs].tolist()
+
             # in case the words are separated by a ';' insted of a comma
             except KeyError:
                 try:
@@ -224,7 +239,8 @@ def getPolygon(name, path):
                     # get all coordinates from found collums
                     latitudes = df[lng].tolist()
                     longitudes = df[lat].tolist()
-                    
+                    srs = df[crs].tolist()
+
                 # the csv is not valid
                 except KeyError:
                     return (None, "Pleas seperate your data with either ',' or ';'!")
@@ -235,7 +251,8 @@ def getPolygon(name, path):
 
             pointList = []
             for i in range(len((latitudes))):
-                pointList.append((longitudes[i], latitudes[i]))
+                pointList.append(
+                    tuple(CRSTransform(longitudes[i], latitudes[i], crs[0])))
 
             return (convex_hull(pointList), None)
 
@@ -251,21 +268,44 @@ def getPolygon(name, path):
                 curDir = os.getcwd()
                 os.chdir(tmpdirname)
                 ogr2ogr.main(["", "-f", "GeoJSON", "output.json", filepath])
-                res = getPolygon("output.json", tmpdirname)
+                res = ogr2ogrCase("output.json")
                 os.chdir(curDir)
             return res
         # errors
         except:
             return (None, "file not found or your gml/xml/kml data is not valid")
 
+    def ogr2ogrCase(filepath):
+        """Method for extracting the crs of a valid GeoJSON file\n
+        @param filepath Full path to GeoJSON
+        @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
+        """
+        try:
+            myGeojson = pygeoj.load(filepath=filepath)
+            crs = myGeojson.crs['properties']['name']
+            if crs.find('EPSG') != -1:
+                crs = int(crs.split(':')[-1])
+            else:
+                return (None, "No reference system found or not as EPSG Code")
+
+            pointList = []
+            for features in myGeojson:
+                # the coordinates are beeing extracted from the GeoJSON and transformed into wgs84 coordinates
+                pointList.extend(list(map(lambda point: CRSTransform(point[1], point[0], crs), list(
+                    map(tuple, getCoordinatesFromGeoJson(features.geometry.coordinates))))))
+
+            return (convex_hull(pointList), None)
+        except:
+            return (None, "File Error!")
+
 #################################################################
 
-    #shapefile handelig
+    # shapefile handelig
     if file_extension == ".shp":
         return shapefileCase(filepath)
 
     # geojson handeling
-    elif file_extension in (".json" , ".geojson"):
+    elif file_extension in (".json", ".geojson"):
         return jsonCase(filepath)
 
     # netCDF and GeoTiff handeling
@@ -290,6 +330,7 @@ def getPolygon(name, path):
 
 #################################################################
 
+
 def CRSTransform(Long, Lat, refsys):
     # Coordinate Reference System (CRS)
     SourceEPSG = refsys
@@ -304,7 +345,7 @@ def CRSTransform(Long, Lat, refsys):
     transform = osr.CoordinateTransformation(source, target)
     point = ogr.CreateGeometryFromWkt("POINT (%s %s)" % (Long, Lat))
     point.Transform(transform)
-    return (point.GetX(),point.GetY())
+    return (point.GetX(), point.GetY())
 
 
 def convex_hull(points):
@@ -331,7 +372,7 @@ def convex_hull(points):
     def cross(o, a, b):
         return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
 
-    # Build lower hull 
+    # Build lower hull
     lower = []
     for p in points:
         while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
@@ -346,10 +387,23 @@ def convex_hull(points):
         upper.append(p)
 
     # Concatenation of the lower and upper hulls gives the convex hull.
-    # Last point of each list is omitted because it is repeated at the beginning of the other list. 
+    # Last point of each list is omitted because it is repeated at the beginning of the other list.
     return lower[:-1] + upper[:-1]
 
 
+def getCoordinatesFromGeoJson(listInList):
+    coordinates = []
+    for sublist in listInList:
+        if type(sublist) is list:
+            if type(sublist[0]) is list:
+                coordinates.extend(getCoordinatesFromGeoJson(sublist))
+            else:
+                coordinates.extend(listInList)
+                break
+        else:
+            coordinates.append(listInList)
+            break
+    return coordinates
 
 
 # Main method
