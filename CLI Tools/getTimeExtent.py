@@ -90,11 +90,7 @@ def getTimeExtent(name, path):
             time = None
             # searching for valid names for latitude and longitude
             for t in header:
-                if t == "date":
-                    time = t
-                if t == "time":
-                    time = t
-                if t == "timestamp":
+                if t.lower() in ("date", "time", "timestamp"):
                     time = t
             csvfile.close()
 

@@ -16,3 +16,7 @@ CLI Tools/output\.json
 readme pycsw\.md
 
 *.code-workspace
+
+CLI Tools/\.vscode/
+
+CLI Tools/__pycache__/

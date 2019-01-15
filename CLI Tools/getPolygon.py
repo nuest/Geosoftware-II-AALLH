@@ -184,25 +184,11 @@ def getPolygon(name, path):
                 lat = None
                 crs = None
                 for t in header:
-                    if t.lower() == "longitude":
+                    if t.lower() in ("longitude", "lon", "long", "lng"):
                         lng = t
-                    if t.lower() == "latitude":
+                    if t.lower() in ("latitude", "lat"):
                         lat = t
-                    if t.lower() == "lon":
-                        lng = t
-                    if t.lower() == "long":
-                        lng = t
-                    if t.lower() == "lng":
-                        lng = t
-                    if t.lower() == "lat":
-                        lat = t
-                    if t.lower() == "crs":
-                        crs = t
-                    if t.lower() == "srs":
-                        crs = t
-                    if t.lower() == "reference system":
-                        crs = t
-                    if t.lower() == "coordinate reference systems":
+                    if t.lower() in ("crs", "srs", "coordinate reference systems", "reference systems", "spatial reference system"):
                         crs = t
                 return (lng, lat, crs)
 
