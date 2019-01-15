@@ -1,52 +1,42 @@
-import os
-import sys
-import functools
 import math
 
 
-def sameDatatype(file1, file2):
-    filename1, file_extension1 = os.path.splitext(file1)
-    filename2, file_extension2 = os.path.splitext(file2)
-
-    same1, same2 = 0,0
-    same1 = file_extension1.find(file_extension2) # 2 in 1
-    same2 = file_extension2.find(file_extension1) # 1 in 2
+def sameDatatype(fileEnding1, fileEnding2):
+    print(fileEnding1, fileEnding2)
+    same1, same2 = -1,-1
+    same1 = fileEnding1.find(fileEnding2.replace(".", "")) # 2 in 1
+    same2 = fileEnding2.find(fileEnding1.replace(".", "")) # 1 in 2
+    print(same1, same2)
 
     return 100 if same1>=0 or same2>=0 else 0
 
-# def sameAuthor(file1, file2):
-#     author1 = ""
-#     author2 = ""
+def similarAuthor(author1, author2):
+    return 100 if author1 == author2 else 0
 
-#     return 100 if author1.lower() == author2.lower() else 0
-
-def similarTitle(file1, file2):
-    filename1, file_extension1 = os.path.splitext(file1)
-    filename2, file_extension2 = os.path.splitext(file2)
-
+def similarTitle(title1, title2):
     countList = 0
-    if len(filename1) >= len(filename2):
+    if len(title1) >= len(title2):
         # searches for same caracters in both strings
         charList = []
-        for i in filename2:
+        for i in title2:
             if i not in charList:
                 charList.append(i)
-                countList += filename1.count(i)
+                countList += title1.count(i)
         percent = 0
-        if len(filename1) != 0:
-            percent = countList*100/len(filename1)
+        if len(title1) != 0:
+            percent = countList*100/len(title1)
             percent = math.floor(percent*100)/100
         return percent
     else:
         charList = []
-        for i in filename1:
+        for i in title1:
             if i not in charList:
                 charList.append(i)
-                countList += filename2.count(i)
+                countList += title2.count(i)
         percent = 0
-        if len(filename2) != 0:
-            percent = countList*100/len(filename2)
+        if len(title2) != 0:
+            percent = countList*100/len(title2)
             percent = math.floor(percent*100)/100
         return percent
 
-print(similarTitle("FeatureCollection.json","geoTiffTest.tif"))
+print(sameDatatype(".tif",".geotif"))

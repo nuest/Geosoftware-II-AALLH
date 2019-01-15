@@ -1,5 +1,3 @@
-import os
-import sys
 from math import *
 
 # add local modules folder
@@ -7,12 +5,9 @@ from math import *
 # sys.path.append(file_path)
 
 from osgeo import gdal, ogr, osr
-from subprocess import Popen, PIPE
+# from subprocess import Popen, PIPE
 
 def spatialOverlap(bboxA, bboxB):
-    """
-    returns a 
-    """
     # get Boundingboxes as Geometries
     boxA = _generateGeometryFromBbox(bboxA)
     boxB = _generateGeometryFromBbox(bboxB)
@@ -100,7 +95,7 @@ def spatialDistance(bboxA, bboxB):
         distBetweenCenterPoints = _getDistance((centerA.GetY(), centerA.GetX()),(centerB.GetY(), centerB.GetX()))
         # print(distBetweenCenterPoints)
 
-    if distBetweenCenterPoints != None and longerDistance != None:
+    if distBetweenCenterPoints is not None and longerDistance is not None:
         distPercentage = (1 - (distBetweenCenterPoints/longerDistance)) * 100
         distPercentage = floor(distPercentage * 100)/100
         # print(distPercentage if distPercentage>0 else 0)
@@ -110,31 +105,31 @@ def spatialDistance(bboxA, bboxB):
         return 0
 
 
-def sameDatasetType(file1, file2):
-    file1isRaster = None
-    file2isRaster = None
-    try:
-        gdal.UseExceptions()
-        gdal.Open(file1)
-        file1isRaster = True
+# def sameDatasetType(file1, file2):
+#     file1isRaster = None
+#     file2isRaster = None
+#     try:
+#         gdal.UseExceptions()
+#         gdal.Open(file1)
+#         file1isRaster = True
 
-        gdal.Open(file2)
-        file2isRaster = True
-    except:
-        try:
-            ogr.UseExceptions()
-            args = ['ogrinfo', '-ro', '-so', '-al', '%s' % file1]
-            process = Popen(args, stdout=PIPE, stderr=PIPE)
-            file1isRaster = False
-            args = ['ogrinfo', '-ro', '-so', '-al', '%s' % file2]
-            process = Popen(args, stdout=PIPE, stderr=PIPE)
-            file2isRaster = False
-        except:
-            return 0
-        else:
-            return 100
-    else:
-        return 100
+#         gdal.Open(file2)
+#         file2isRaster = True
+#     except:
+#         try:
+#             ogr.UseExceptions()
+#             args = ['ogrinfo', '-ro', '-so', '-al', '%s' % file1]
+#             process = Popen(args, stdout=PIPE, stderr=PIPE)
+#             file1isRaster = False
+#             args = ['ogrinfo', '-ro', '-so', '-al', '%s' % file2]
+#             process = Popen(args, stdout=PIPE, stderr=PIPE)
+#             file2isRaster = False
+#         except:
+#             return 0
+#         else:
+#             return 100
+#     else:
+#         return 100
 
 
 #############################################################################
@@ -178,8 +173,8 @@ def _generateGeometryFromBbox(bbox):
 def _getDistance(startingpoint, endpoint):
     """
     input: in WGS84 - startingpoint[lat, lon], endpoint[lat, lon]
+    @see http://www.movable-type.co.uk/scripts/latlong.html
     """
-    # @see http://www.movable-type.co.uk/scripts/latlong.html
     radius = 6371
     radLat1 = (startingpoint[0] * pi) / 180
     radLat2 = (endpoint[0] * pi) / 180
@@ -189,7 +184,6 @@ def _getDistance(startingpoint, endpoint):
     a = sin(deltLat / 2) * sin(deltLat / 2) + cos(radLat1) * cos(radLat2) * sin(deltLon / 2) * sin(deltLon / 2)
     c = 2 * atan2(sqrt(a), sqrt(1-a))
     d = radius * c
-    # print(d)
     return d
 
 def _getMidPoint(bbox):
@@ -229,59 +223,59 @@ def _getMidPoint(bbox):
 ###############################################################################       
 
 
-# Geometry
-print("\n Geometry \n")
-bbox1 = [13.0078125, 50.62507306341435, 5.44921875, 45.82879925192134]
-bbox2 = [17.7978515625, 52.09300763963822, 7.27294921875, 46.14939437647686]
-print(spatialDistance(bbox1, bbox2))
-print(spatialOverlap(bbox1, bbox2))
-print(similarArea(bbox1, bbox2))
+# # Geometry
+# print("\n Geometry \n")
+# bbox1 = [13.0078125, 50.62507306341435, 5.44921875, 45.82879925192134]
+# bbox2 = [17.7978515625, 52.09300763963822, 7.27294921875, 46.14939437647686]
+# print(spatialDistance(bbox1, bbox2))
+# print(spatialOverlap(bbox1, bbox2))
+# print(similarArea(bbox1, bbox2))
 
-# Points
-print("\n Points \n")
-bbox1 = [13.0078125, 50.62507306341435, 13.0078125, 50.62507306341435]
-bbox2 = [13.0082125, 50.62513301341435, 13.0082125, 50.62513301341435]
-print(spatialDistance(bbox1, bbox2))
-print(spatialOverlap(bbox1, bbox2))
-print(similarArea(bbox1, bbox2))
+# # Points
+# print("\n Points \n")
+# bbox1 = [13.0078125, 50.62507306341435, 13.0078125, 50.62507306341435]
+# bbox2 = [13.0082125, 50.62513301341435, 13.0082125, 50.62513301341435]
+# print(spatialDistance(bbox1, bbox2))
+# print(spatialOverlap(bbox1, bbox2))
+# print(similarArea(bbox1, bbox2))
 
 
-# Line and Point
-print("\n Line and Point \n")
-bbox1 = [11.0078125, 50.62507306341435, 13.0078125, 50.62507306341435]
-bbox2 = [13.0082125, 50.62513301341435, 13.0082125, 50.62513301341435]
-print(spatialDistance(bbox1, bbox2))
-print(spatialOverlap(bbox1, bbox2))
-print(similarArea(bbox1, bbox2))
+# # Line and Point
+# print("\n Line and Point \n")
+# bbox1 = [11.0078125, 50.62507306341435, 13.0078125, 50.62507306341435]
+# bbox2 = [13.0082125, 50.62513301341435, 13.0082125, 50.62513301341435]
+# print(spatialDistance(bbox1, bbox2))
+# print(spatialOverlap(bbox1, bbox2))
+# print(similarArea(bbox1, bbox2))
 
-# Polygon and Point
-print("\n Polygon and Point \n")
-bbox1 = [13.0078125, 50.62507306341435, 5.44921875, 45.82879925192134]
-bbox2 = [13.0082125, 50.62513301341435, 13.0082125, 50.62513301341435]
-print(spatialDistance(bbox1, bbox2))
-print(spatialOverlap(bbox1, bbox2))
-print(similarArea(bbox1, bbox2))
+# # Polygon and Point
+# print("\n Polygon and Point \n")
+# bbox1 = [13.0078125, 50.62507306341435, 5.44921875, 45.82879925192134]
+# bbox2 = [13.0082125, 50.62513301341435, 13.0082125, 50.62513301341435]
+# print(spatialDistance(bbox1, bbox2))
+# print(spatialOverlap(bbox1, bbox2))
+# print(similarArea(bbox1, bbox2))
 
-# Same BoundingBox
-print("\n Same BoundingBox \n")
-bbox1 = [0.439453,29.688053,3.911133,31.765537]
-bbox2 = [0.439453,29.688053,3.911133,31.765537]
-print(spatialDistance(bbox1, bbox2))
-print(spatialOverlap(bbox1, bbox2))
-print(similarArea(bbox1, bbox2))
+# # Same BoundingBox
+# print("\n Same BoundingBox \n")
+# bbox1 = [0.439453,29.688053,3.911133,31.765537]
+# bbox2 = [0.439453,29.688053,3.911133,31.765537]
+# print(spatialDistance(bbox1, bbox2))
+# print(spatialOverlap(bbox1, bbox2))
+# print(similarArea(bbox1, bbox2))
 
-# Ähnliche BoundingBox, die nah beieinander liegt
-print("\n Similar Bounding Box which are close to each other \n")
-bbox1 = [7.596703,51.950402,7.656441,51.978536]
-bbox2 = [7.588205,51.952412,7.616014,51.967644]
-print(spatialDistance(bbox1, bbox2))
-print(spatialOverlap(bbox1, bbox2))
-print(similarArea(bbox1, bbox2))
+# # Ähnliche BoundingBox, die nah beieinander liegt
+# print("\n Similar Bounding Box which are close to each other \n")
+# bbox1 = [7.596703,51.950402,7.656441,51.978536]
+# bbox2 = [7.588205,51.952412,7.616014,51.967644]
+# print(spatialDistance(bbox1, bbox2))
+# print(spatialOverlap(bbox1, bbox2))
+# print(similarArea(bbox1, bbox2))
 
-# Weit entfernte Boundingboxen 
-print("\n Not so related Bounding Box \n")
-bbox1 = [7.596703,51.950402,7.656441,51.978536]
-bbox2 = [-96.800194,32.760085,-96.796353,32.761385]
-print(spatialDistance(bbox1, bbox2))
-print(spatialOverlap(bbox1, bbox2))
-print(similarArea(bbox1, bbox2))
+# # Weit entfernte Boundingboxen 
+# print("\n Not so related Bounding Box \n")
+# bbox1 = [7.596703,51.950402,7.656441,51.978536]
+# bbox2 = [-96.800194,32.760085,-96.796353,32.761385]
+# print(spatialDistance(bbox1, bbox2))
+# print(spatialOverlap(bbox1, bbox2))
+# print(similarArea(bbox1, bbox2))

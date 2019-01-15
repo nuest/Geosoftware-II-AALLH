@@ -1,9 +1,5 @@
 from math import floor
 
-# add local modules folder
-# file_path = os.path.join('..', 'Python_Modules')
-# sys.path.append(file_path)
-
 from DateTime import DateTime
 
 def timeLength(timeA, timeB):
@@ -82,6 +78,6 @@ def similarInterval(timeA, timeB):
             intervalPercentage = floor(intervalPercentage*100)/100
             return intervalPercentage
 
-print(timeOverlap(['1935/01/01 00:00:00 GMT+0', '2014/01/01 00:00:00 GMT+0', 365.253164556962], ['2013/01/01 00:00:00 GMT+0', '2018/03/28 12:43:14.034000 GMT+0', 0]))
+# print(timeOverlap(['1935/01/01 00:00:00 GMT+0', '2014/01/01 00:00:00 GMT+0', 365.253164556962], ['2013/01/01 00:00:00 GMT+0', '2018/03/28 12:43:14.034000 GMT+0', 0]))
 
 # print(DateTime('1935/01/01 00:00:10 GMT+0') - DateTime('1935/01/01 00:00:00 GMT+0'))

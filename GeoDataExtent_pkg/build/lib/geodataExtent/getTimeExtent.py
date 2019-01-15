@@ -81,7 +81,7 @@ def getTimeExtent(name, path):
     def CSVCase(filepath):
         # column name should be either date, time or timestamp
         # @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
-        try:  # finding the correct collums for latitude and longitude
+        try:  # finding the correct columns for latitude and longitude
             csvfile = open(filepath)
             head = csv.reader(csvfile, delimiter=' ', quotechar='|')
             # get the headline and convert, if possible, ';' to ','

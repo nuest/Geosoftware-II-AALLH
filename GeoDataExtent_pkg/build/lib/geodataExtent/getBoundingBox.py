@@ -244,12 +244,12 @@ def getBoundingBox(name, path):
 
     def csvCase(filepath):
         """Method for extracting the boundingbox of a "CSV on the Web" formated file
-        Collums holding the coordinates must be named either longitude/lon/lng/long, latitude/lat and the CRS collum must be named either crs/srs/reference system/coordinate reference systems\n
+        columns holding the coordinates must be named either longitude/lon/lng/long, latitude/lat and the CRS column must be named either crs/srs/reference system/coordinate reference systems\n
         @param filepath Full path to CSV/text file
         @returns a boundingbox as an array in a tuple in WGS84, formated like ([minLong, minLat, maxLong, maxLat], None)
         @see https://stackoverflow.com/questions/16503560/read-specific-columns-from-a-csv-file-with-csv-module
         """
-        try:  # finding the correct collums for latitude and longitude
+        try:  # finding the correct columns for latitude and longitude
             csvfile = open(filepath)
             head = csv.reader(csvfile, delimiter=' ', quotechar='|')
             # get the headline an convert, if possible, ';' to ','
@@ -258,9 +258,9 @@ def getBoundingBox(name, path):
 
             # searching for valid names for latitude and longitude
             def getLatLonCrs(header):
-                """get the correct names of the collumns holding the coordinates
+                """get the correct names of the columns holding the coordinates
                 @param header Header of the CSV
-                @returns (lon, lat, crs) where lon, lat, crs are the collum names
+                @returns (lon, lat, crs) where lon, lat, crs are the column names
                 """
                 lng = None
                 lat = None
@@ -293,7 +293,7 @@ def getBoundingBox(name, path):
         else:
             try:
                 df = pd.read_csv(filepath, header=0)
-                # get all coordinates from found collums
+                # get all coordinates from found columns
                 latitudes = df[lng].tolist()
                 longitudes = df[lat].tolist()
                 srs = df[crs].tolist()
@@ -303,7 +303,7 @@ def getBoundingBox(name, path):
                 try:
                     # tell the reader that the seperator is a ';'
                     df = pd.read_csv(filepath, header=0, sep=';')
-                    # get all coordinates from found collums
+                    # get all coordinates from found columns
                     latitudes = df[lng].tolist()
                     longitudes = df[lat].tolist()
                     srs = df[crs].tolist()
