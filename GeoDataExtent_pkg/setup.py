@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="geodataExtent",
-    version="0.1.8",
+    version="0.2.4",
     author="A^sHL^2",
     author_email="h_fock01@uni-muenster.de",
     description="Package for extracting the time and spatial extent of Geodata",
@@ -30,6 +30,6 @@ setuptools.setup(
         "tabulate >= 0.8.2",
     ],
     entry_points = {
-        'console_scripts': ['extract-extent=geodataExtent.masterExtract:main'],
+        'console_scripts': ['extract-extent=geodataExtent.masterExtract:main', 'extract2pycsw=geodataExtent.sendToPyCSW:main'],
     }
 )

@@ -1,3 +1,4 @@
 [console_scripts]
 extract-extent = geodataExtent.masterExtract:main
+extract2pycsw = geodataExtent.sendToPyCSW:main
 
