@@ -62,6 +62,7 @@ In your Browser, test our new requests by adding the following endpoints:
 - if [GDAL](https://www.gdal.org/) won't install with pip, try a different Method
   - in my case (Windows) it worked using gdal from [this site](http://www.xavierdupre.fr/enseignement/setup/index_modules_list.html)
   - `$ pip install <path to .whl>`
+- download ogr2ogr from [this](http://svn.osgeo.org/gdal/trunk/gdal/swig/python/samples/ogr2ogr.py) site and add the python file to `python/Lib/site-packages`
 
  Open the commandline and navigate to the CLI Tools folder in our project folder `$ cd CLI Tools` and type `$ python masterExtract.py --help` to show the options you can chose from.
 
@@ -69,6 +70,7 @@ In your Browser, test our new requests by adding the following endpoints:
 If pip is installed:
 - `$ pip install geodataExtent`
 - If GDAL won't install, try method above
+- download ogr2ogr as described above
 
 type `$ extract-extent --help`
 

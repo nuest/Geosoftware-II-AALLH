@@ -1,3 +1,8 @@
+'''
+Created on 15.01.2018
+@author: Henry Fock, Anika Graupner
+'''
+
 import click
 
 import extractGeoDataFromFolder as fext
