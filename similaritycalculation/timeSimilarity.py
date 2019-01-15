@@ -1,7 +1,4 @@
-import os
-import sys
-from math import *
-import time as timeMod
+from math import floor
 
 # add local modules folder
 # file_path = os.path.join('..', 'Python_Modules')

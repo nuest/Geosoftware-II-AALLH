@@ -70,7 +70,7 @@ def getTimeExtent(name, path):
                 # avgInt = math.floor(avgInt*1000)/1000
                 # print(avgInt)
 
-            return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
+            return ([isoTimeSeq[0].Date(), isoTimeSeq[-1].Date(), avgInt], None)
 
         # errors
         except KeyError:
@@ -138,7 +138,7 @@ def getTimeExtent(name, path):
                 avgInt = functools.reduce(
                     lambda x, y: x + y, interval) / float(len(interval))
 
-                return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
+                return ([isoTimeSeq[0].Date(), isoTimeSeq[-1].Date(), avgInt], None)
 
             # errors
             except:
@@ -176,7 +176,7 @@ def getTimeExtent(name, path):
                 avgInt = functools.reduce(
                     lambda x, y: x + y, interval) / float(len(interval))
 
-                return ([str(isoTimeSeq[0]), str(isoTimeSeq[-1]), avgInt], None)
+                return ([isoTimeSeq[0].Date(), isoTimeSeq[-1].Date(), avgInt], None)
             else:
                 prop = ""
                 if "time" in jsonDict:
@@ -190,7 +190,7 @@ def getTimeExtent(name, path):
 
                 timeext = jsonDict["properties"][prop]
                 timeext = DateTime(timeext)
-                return ([timeext, timeext, 0], None)
+                return ([timeext.Date(), timeext.Date(), 0], None)
         except:
             return (None, "File Error!")
         finally:
