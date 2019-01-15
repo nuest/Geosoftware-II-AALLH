@@ -6,6 +6,7 @@ geodataExtent/getBoundingBox.py
 geodataExtent/getPolygon.py
 geodataExtent/getTimeExtent.py
 geodataExtent/masterExtract.py
+geodataExtent/sendToPyCSW.py
 geodataExtent.egg-info/PKG-INFO
 geodataExtent.egg-info/SOURCES.txt
 geodataExtent.egg-info/dependency_links.txt

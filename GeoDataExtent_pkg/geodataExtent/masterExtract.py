@@ -1,3 +1,8 @@
+'''
+Created on 15.01.2018
+@author: Henry Fock, Anika Graupner
+'''
+
 import click
 
 from geodataExtent import extractGeoDataFromFolder as fext
@@ -15,8 +20,8 @@ from geodataExtent import getTimeExtent as timeext
 @click.option('--hull', '-h', default=False, is_flag=True, help="execute convex-hull extraction for one file")
 def main(path, clear, time, space, hull):
     """Main CLI-Tool combining all the single extraction tools in one tool.
-    No return but Console-Output of the wanted extents. If time, space and hull are all false, the folder extraction will be triggered and returns a table with the boundingbox and spatial extent for each individual file in addition to the full time and spatial extent of he folder.
-    Issue: If there are files that are not in WGS84 and do not have a specified referencesystem, the spatial extent of the folder will might not be in WGS84
+
+    \nNo return but Console-Output of the wanted extents. If time, space and hull are all false, the folder extraction will be triggered and returns a table with the boundingbox and spatial extent for each individual file in addition to the full time and spatial extent of he folder.\nIssue: If there are files that are not in WGS84 and do not have a specified referencesystem, the spatial extent of the folder will might not be in WGS84
     """
     output = []
 
