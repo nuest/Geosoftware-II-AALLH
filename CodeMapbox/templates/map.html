@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Map based metadata browsing</title>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <link href="{{ url_for('static', filename='main.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='Projekt.png') }}">
+</head>
+
+<body>
+
+
+    <h1>Find your similar record!</h1>
+    <h3>Please locate yourselve or click on the map where you want to find records!</h3>
+
+    <h2 id="info">Start</h2>
+    <div id="map"></div>
+    <script>
+        mapboxgl.accessToken =
+            'pk.eyJ1IjoiY2hlcnJ5MTM1OSIsImEiOiJjam81bTRsbjIwOHZwM3ZvMWxoaXIzNzgxIn0.S75v2qYbBXUTvqIqXFQLfg';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/basic-v9',
+            zoom: 4,
+            center: [7.6261347, 51.9606649]
+        });
+
+        map.addControl(new mapboxgl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            trackUserLocation: true
+        }));
+
+        map.on('click', function (e) {
+            document.getElementById('info').innerHTML =
+                // e.point is the x, y coordinates of the mousemove event relative
+                // to the top-left corner of the map
+                JSON.stringify(e.point) + '<br />' +
+                // e.lngLat is the longitude, latitude geographical position of the event
+                JSON.stringify(e.lngLat);
+        });
+
+    </script>
+</body>
+
+</html>

@@ -39,6 +39,18 @@ body{
     font-size: 30px;
 }
 
-h1{text-align :center; color: antiquewhite;}
+#info {
+    display: block;
+    position: relative;
+    margin: 0px auto;
+    width: 50%;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+    color: rgb(255, 255, 255);
+    background: #fff;
+}
 
-h3{text-align: center;color: antiquewhite;}
+h1, h2, h3{text-align :center; color: antiquewhite;}
